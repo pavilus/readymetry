@@ -49,6 +49,12 @@ supabase/config.toml.local
 *.p12
 *.pfx
 
+# VPS ops config (local reference only)
+.vps/
+
+# Brand assets (local design reference, not part of the app)
+_brand/
+
 # vercel
 .vercel
 
