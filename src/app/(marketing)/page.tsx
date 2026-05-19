@@ -1,10 +1,21 @@
+import Navbar from "@/components/marketing/Navbar";
+import Hero from "@/components/marketing/Hero";
+import CertCatalog from "@/components/marketing/CertCatalog";
+import HowItWorks from "@/components/marketing/HowItWorks";
+import CTABanner from "@/components/marketing/CTABanner";
+import Footer from "@/components/marketing/Footer";
+
 export default function LandingPage() {
   return (
-    <main className="min-h-screen">
-      {/* Landing page — built in next phase */}
-      <div className="flex items-center justify-center min-h-screen">
-        <h1 className="text-4xl font-bold text-brand-700">Readymetry</h1>
-      </div>
-    </main>
+    <>
+      <Navbar />
+      <main>
+        <Hero />
+        <CertCatalog />
+        <HowItWorks />
+        <CTABanner />
+      </main>
+      <Footer />
+    </>
   );
 }

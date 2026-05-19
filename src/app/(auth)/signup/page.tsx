@@ -6,10 +6,10 @@ import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import AuthCard from "@/components/shared/AuthCard";
 import { ROUTES } from "@/lib/constants";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,18 +21,34 @@ export default function LoginPage() {
 
   return (
     <AuthCard
-      title="Welcome back"
-      subtitle="Sign in to your Readymetry account"
+      title="Create your account"
+      subtitle="Start your certification journey today"
       footer={
         <>
-          Don&apos;t have an account?{" "}
-          <Link href={ROUTES.signup} className="font-semibold text-brand-700 hover:underline">
-            Sign up free
+          Already have an account?{" "}
+          <Link href={ROUTES.login} className="font-semibold text-brand-700 hover:underline">
+            Log in
           </Link>
         </>
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* Full name */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">
+            Full name
+          </label>
+          <input
+            type="text"
+            required
+            autoComplete="name"
+            value={form.fullName}
+            onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+            placeholder="Alex Johnson"
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-white text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent transition"
+          />
+        </div>
+
         {/* Email */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -51,25 +67,17 @@ export default function LoginPage() {
 
         {/* Password */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-sm font-medium text-foreground">
-              Password
-            </label>
-            <Link
-              href={ROUTES.forgotPassword}
-              className="text-xs text-brand-700 hover:underline font-medium"
-            >
-              Forgot password?
-            </Link>
-          </div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">
+            Password
+          </label>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="Your password"
+              placeholder="Min. 8 characters"
               className="w-full px-4 py-2.5 pr-10 rounded-lg border border-border bg-white text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent transition"
             />
             <button
@@ -92,10 +100,17 @@ export default function LoginPage() {
             <Loader2 size={16} className="animate-spin" />
           ) : (
             <>
-              Sign In <ArrowRight size={16} />
+              Create Account <ArrowRight size={16} />
             </>
           )}
         </button>
+
+        <p className="text-center text-[11px] text-muted leading-relaxed">
+          By creating an account you agree to our{" "}
+          <Link href="#" className="underline hover:text-foreground">Terms of Service</Link>{" "}
+          and{" "}
+          <Link href="#" className="underline hover:text-foreground">Privacy Policy</Link>.
+        </p>
       </form>
     </AuthCard>
   );

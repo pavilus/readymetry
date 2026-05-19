@@ -1,0 +1,62 @@
+import Link from "next/link";
+
+const LINKS = {
+  Product: ["Features", "Pricing", "Certifications", "How it Works"],
+  Company: ["About", "Blog", "Careers", "Contact"],
+  Legal: ["Privacy Policy", "Terms of Service", "Cookie Policy"],
+};
+
+export default function Footer() {
+  return (
+    <footer className="bg-white border-t border-border py-14 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+          {/* Brand */}
+          <div className="col-span-2 md:col-span-1">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-lg bg-brand-700 flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L4 7v10l8 5 8-5V7L12 2z" fill="white" fillOpacity="0.9" />
+                </svg>
+              </div>
+              <span className="text-sm font-bold text-foreground">Readymetry</span>
+            </div>
+            <p className="text-xs text-muted leading-relaxed max-w-[180px]">
+              Certification Readiness Engine. Know if you&apos;re ready before exam day.
+            </p>
+          </div>
+
+          {/* Nav columns */}
+          {Object.entries(LINKS).map(([group, items]) => (
+            <div key={group}>
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">
+                {group}
+              </p>
+              <ul className="flex flex-col gap-2.5">
+                {items.map((item) => (
+                  <li key={item}>
+                    <Link
+                      href="#"
+                      className="text-sm text-muted hover:text-foreground transition-colors"
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-border pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="text-xs text-muted">
+            © {new Date().getFullYear()} Readymetry. All rights reserved.
+          </p>
+          <p className="text-xs text-muted">
+            Built for welding professionals worldwide.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
