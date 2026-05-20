@@ -2,42 +2,34 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { saveOnboarding } from "@/lib/actions/onboarding";
+import { createClient } from "@/lib/supabase/client";
 
-const TRACKS = [
-  {
-    id: "11111111-0000-0000-0000-000000000001",
-    code: "AWS CWI",
-    name: "Certified Welding Inspector",
-    body: "American Welding Society",
-    desc: "Part A, B, and C — 150 questions, 3 hours",
-    available: true,
-  },
-  {
-    id: "11111111-0000-0000-0000-000000000002",
-    code: "ASNT NDT Level II",
-    name: "Non-Destructive Testing",
-    body: "ASNT",
-    desc: "PT · MT · UT · RT methods",
-    available: true,
-  },
-  {
-    id: "11111111-0000-0000-0000-000000000003",
-    code: "API 570",
-    name: "Piping Inspector",
-    body: "API",
-    desc: "Coming soon",
-    available: false,
-  },
-];
+interface Track {
+  id: string;
+  code: string;
+  name: string;
+  body: string;
+  description: string | null;
+  available: boolean;
+}
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const [tracks, setTracks] = useState<Track[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from("certifications").select("id, code, name, body, description, available").then(({ data }: any) => {
+      if (data) setTracks(data);
+    });
+  }, []);
   const [step, setStep] = useState(1);
   const [examDate, setExamDate] = useState("");
   const [loading, setLoading] = useState(false);
@@ -71,7 +63,12 @@ export default function OnboardingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            {TRACKS.map((track) => (
+            {tracks.length === 0 && (
+              <div className="col-span-3 flex justify-center py-8">
+                <Loader2 size={20} className="animate-spin text-brand-600" />
+              </div>
+            )}
+            {tracks.map((track) => (
               <button
                 key={track.id}
                 disabled={!track.available}
@@ -91,7 +88,7 @@ export default function OnboardingPage() {
                   {track.code}
                 </span>
                 <p className="text-sm font-bold text-foreground">{track.name}</p>
-                <p className="text-xs text-muted">{track.desc}</p>
+                <p className="text-xs text-muted">{track.description ?? track.body}</p>
                 {!track.available && (
                   <span className="text-[11px] text-muted font-medium">Coming soon</span>
                 )}

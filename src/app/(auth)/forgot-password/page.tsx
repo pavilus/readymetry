@@ -5,18 +5,24 @@ import { useState } from "react";
 import { ArrowLeft, Loader2, CheckCircle } from "lucide-react";
 import AuthCard from "@/components/shared/AuthCard";
 import { ROUTES } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Password reset logic wired in next phase
-    await new Promise((r) => setTimeout(r, 1000));
+    setError("");
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+    });
     setLoading(false);
+    if (error) { setError(error.message); return; }
     setSent(true);
   };
 
@@ -35,8 +41,8 @@ export default function ForgotPasswordPage() {
     >
       {sent ? (
         <div className="flex flex-col items-center text-center gap-4 py-4">
-          <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center">
-            <CheckCircle size={28} className="text-success" />
+          <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center">
+            <CheckCircle size={28} className="text-emerald-600" />
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground mb-1">Check your inbox</p>
@@ -54,6 +60,7 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {error && <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">{error}</div>}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
               Email address

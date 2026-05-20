@@ -35,7 +35,7 @@ export default function SignupPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("user_profiles").update({
+      await (supabase as any).from("profiles").update({
         account_type: accountType,
         organization_name: accountType === "enterprise" ? form.organizationName : null,
       }).eq("id", user.id);
