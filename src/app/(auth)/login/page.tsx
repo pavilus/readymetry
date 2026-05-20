@@ -2,21 +2,34 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import AuthCard from "@/components/shared/AuthCard";
 import { ROUTES } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({ email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Auth logic wired in next phase
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoading(false);
+    setError("");
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password,
+    });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      router.push(ROUTES.dashboard);
+    }
   };
 
   return (
@@ -33,6 +46,11 @@ export default function LoginPage() {
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {error && (
+          <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
+            {error}
+          </div>
+        )}
         {/* Email */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">

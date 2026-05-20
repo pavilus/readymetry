@@ -103,44 +103,44 @@ export default function CertCatalog() {
           {CERTS.map((cert) => (
             <div
               key={cert.id}
-              className={`relative rounded-2xl border bg-white p-4 flex flex-col gap-3 transition-shadow ${
+              className={`relative rounded-2xl border bg-white p-5 flex flex-col gap-4 transition-all ${
                 cert.available
-                  ? "border-brand-200 hover:shadow-elevated cursor-pointer"
-                  : "border-border opacity-60"
+                  ? "border-brand-200 hover:shadow-[0_8px_30px_rgba(109,40,217,0.12)] hover:-translate-y-0.5 cursor-pointer"
+                  : "border-border opacity-50"
               }`}
             >
               {/* Badge */}
-              <div className={`w-10 h-10 rounded-xl ${cert.lightColor} flex items-center justify-center`}>
-                <span className={`text-xs font-bold ${cert.textColor}`}>
+              <div className={`w-12 h-12 rounded-xl ${cert.lightColor} flex items-center justify-center`}>
+                <span className={`text-sm font-extrabold ${cert.textColor}`}>
                   {cert.code.split(" ")[0]}
                 </span>
               </div>
 
-              <div>
-                <p className="text-xs font-bold text-foreground leading-tight">{cert.code}</p>
-                <p className="text-[11px] text-muted mt-0.5 leading-tight">{cert.name}</p>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-foreground leading-tight">{cert.code}</p>
+                <p className="text-xs text-muted mt-1 leading-snug">{cert.name}</p>
               </div>
 
               {cert.available && cert.questions && (
-                <div className="flex items-center gap-1">
-                  <CheckCircle size={10} className="text-success" />
-                  <span className="text-[10px] text-muted">{cert.questions} questions</span>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle size={11} className="text-success shrink-0" />
+                  <span className="text-[11px] text-muted">{cert.questions} questions</span>
                 </div>
               )}
 
               {!cert.available && !cert.comingSoon && (
-                <div className="flex items-center gap-1">
-                  <Lock size={10} className="text-slate-400" />
-                  <span className="text-[10px] text-slate-400">Coming soon</span>
+                <div className="flex items-center gap-1.5">
+                  <Lock size={11} className="text-slate-400 shrink-0" />
+                  <span className="text-[11px] text-slate-400">Coming soon</span>
                 </div>
               )}
 
               {cert.available && (
                 <Link
                   href={ROUTES.signup}
-                  className="mt-auto text-[11px] font-semibold text-brand-700 flex items-center gap-0.5 hover:gap-1.5 transition-all"
+                  className="text-xs font-semibold text-brand-700 flex items-center gap-1 hover:gap-2 transition-all"
                 >
-                  Practice <ArrowRight size={10} />
+                  Practice <ArrowRight size={11} />
                 </Link>
               )}
             </div>

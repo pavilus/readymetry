@@ -33,10 +33,8 @@ function ReadinessRing({ score }: { score: number }) {
 function DashboardPreview() {
   return (
     <div className="relative">
-      {/* Glow behind card */}
       <div className="absolute -inset-4 bg-brand-700/10 rounded-3xl blur-2xl" />
 
-      {/* Main card */}
       <div className="relative bg-white rounded-2xl shadow-[0_8px_40px_rgba(109,40,217,0.15)] border border-brand-100 p-5 w-[300px]">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -115,20 +113,21 @@ function DashboardPreview() {
 const STATS = [
   { value: "50,000+", label: "Professionals" },
   { value: "95%", label: "Pass Rate" },
-  { value: "AI-Powered", label: "Insights" },
+  { value: "Built for", label: "professionals worldwide" },
 ];
 
 export default function Hero() {
   return (
-    <section className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      <div className="max-w-7xl mx-auto">
+    <section className="pt-40 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden relative">
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-brand-50 blur-3xl opacity-60 -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+      <div className="max-w-7xl mx-auto relative">
         <div className="flex flex-col lg:flex-row items-center gap-16">
           {/* Left — copy */}
           <div className="flex-1 text-center lg:text-left">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 mb-6">
               <Zap size={12} className="text-brand-700" />
-              <span className="text-xs font-semibold text-brand-700">AI-Powered Readiness Analytics</span>
+              <span className="text-xs font-semibold text-brand-700">Certification Readiness Engine</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground leading-tight tracking-tight mb-6">
@@ -184,9 +183,9 @@ export default function Hero() {
         </div>
 
         {/* Stats bar */}
-        <div className="mt-20 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0">
+        <div className="mt-16 flex items-center gap-0 divide-x divide-border max-w-xl mx-auto lg:mx-0">
           {STATS.map((s) => (
-            <div key={s.label} className="text-center lg:text-left">
+            <div key={s.label} className="flex-1 px-6 first:pl-0 last:pr-0 text-center lg:text-left">
               <p className="text-2xl font-extrabold text-brand-700">{s.value}</p>
               <p className="text-xs text-muted mt-0.5">{s.label}</p>
             </div>

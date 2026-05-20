@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,18 +21,17 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-36">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-brand-700 flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L4 7v10l8 5 8-5V7L12 2z" fill="white" fillOpacity="0.9" />
-                <path d="M12 7l-4 2.5v5L12 17l4-2.5v-5L12 7z" fill="white" fillOpacity="0.4" />
-              </svg>
-            </div>
-            <span className="text-lg font-bold text-foreground tracking-tight">
-              Readymetry
-            </span>
+          <Link href="/" className="flex items-center shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Readymetry"
+              width={480}
+              height={144}
+              className="h-[134px] w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop nav */}

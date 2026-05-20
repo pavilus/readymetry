@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 interface AuthCardProps {
   title: string;
@@ -11,14 +12,15 @@ export default function AuthCard({ title, subtitle, children, footer }: AuthCard
   return (
     <div className="w-full max-w-md">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2 justify-center mb-8">
-        <div className="w-9 h-9 rounded-xl bg-brand-700 flex items-center justify-center shadow-[0_4px_14px_rgba(109,40,217,0.4)]">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L4 7v10l8 5 8-5V7L12 2z" fill="white" fillOpacity="0.9" />
-            <path d="M12 7l-4 2.5v5L12 17l4-2.5v-5L12 7z" fill="white" fillOpacity="0.4" />
-          </svg>
-        </div>
-        <span className="text-xl font-extrabold text-foreground tracking-tight">Readymetry</span>
+      <Link href="/" className="flex justify-center mb-8">
+        <Image
+          src="/logo.png"
+          alt="Readymetry"
+          width={480}
+          height={144}
+          className="h-[134px] w-auto"
+          priority
+        />
       </Link>
 
       {/* Card */}

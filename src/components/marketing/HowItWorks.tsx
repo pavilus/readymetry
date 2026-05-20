@@ -39,26 +39,26 @@ export default function HowItWorks() {
         </div>
 
         {/* Steps */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
           {/* Connector line (desktop) */}
           <div className="hidden md:block absolute top-10 left-[22%] right-[22%] h-px bg-brand-100" />
 
           {STEPS.map((step, i) => {
             const Icon = step.icon;
             return (
-              <div key={i} className="flex flex-col items-center text-center relative">
-                {/* Icon circle */}
-                <div className="relative mb-6 z-10">
-                  <div className="w-20 h-20 rounded-2xl bg-brand-50 border-2 border-brand-200 flex items-center justify-center shadow-card">
-                    <Icon size={28} className="text-brand-700" />
-                  </div>
-                  <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-brand-700 text-white text-[10px] font-bold flex items-center justify-center">
-                    {i + 1}
-                  </span>
+              <div key={i} className="bg-white rounded-2xl border border-border p-8 flex flex-col items-center text-center relative hover:border-brand-200 hover:shadow-[0_4px_20px_rgba(109,40,217,0.08)] transition-all">
+                {/* Step number */}
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-brand-700 text-white text-xs font-bold flex items-center justify-center shadow">
+                  {i + 1}
                 </div>
 
-                <h3 className="text-lg font-bold text-foreground mb-2">{step.title}</h3>
-                <p className="text-sm text-muted leading-relaxed max-w-xs">{step.description}</p>
+                {/* Icon */}
+                <div className="w-16 h-16 rounded-2xl bg-brand-50 flex items-center justify-center mb-5 mt-2">
+                  <Icon size={26} className="text-brand-700" />
+                </div>
+
+                <h3 className="text-base font-bold text-foreground mb-2">{step.title}</h3>
+                <p className="text-sm text-muted leading-relaxed">{step.description}</p>
               </div>
             );
           })}

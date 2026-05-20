@@ -1,7 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/exams", "/results", "/analytics", "/settings", "/onboarding"];
+// Require auth; plan check happens in dashboard server component
+const PROTECTED_PREFIXES = ["/dashboard", "/exams", "/results", "/analytics", "/settings", "/onboarding", "/plan", "/checkout"];
+// Redirect logged-in users away from these
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 
 export async function middleware(request: NextRequest) {
