@@ -20,6 +20,11 @@ export const ROUTES = {
   examSession: (examId: string) => `/exams/${examId}/session`,
   results: (sessionId: string) => `/results/${sessionId}`,
   reviewResults: (sessionId: string) => `/results/${sessionId}/review`,
+  admin: "/admin",
+  adminUsers: "/admin/users",
+  adminQuestions: "/admin/questions",
+  adminTickets: "/admin/tickets",
+  adminLogs: "/admin/logs",
 } as const;
 
 export const READINESS_THRESHOLDS = {
