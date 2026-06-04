@@ -12,7 +12,7 @@ REMOTE_PATH="/root/readymetry"
 LOCAL_PATH="$(cd "$(dirname "$0")" && pwd)"
 
 echo "▶ Syncing files to VPS..."
-rsync -az -e "ssh -i $SSH_KEY" \
+rsync -az --delete -e "ssh -i $SSH_KEY" \
   --exclude='.next' \
   --exclude='node_modules' \
   --exclude='.env.local' \
@@ -25,6 +25,6 @@ rsync -az -e "ssh -i $SSH_KEY" \
 
 echo "▶ Building and restarting on VPS..."
 ssh -i "$SSH_KEY" "$VPS" \
-  "cd $REMOTE_PATH && npm install --production=false && npm run build && pm2 restart readymetry || pm2 start ecosystem.config.js"
+  "set -e; cd $REMOTE_PATH; npm install --production=false; npm run build; if pm2 describe readymetry >/dev/null 2>&1; then pm2 restart readymetry; else pm2 start ecosystem.config.js; fi; pm2 save"
 
 echo "✓ Deployed to https://readymetry.com"
