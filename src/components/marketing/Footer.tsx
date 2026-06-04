@@ -2,9 +2,21 @@ import Link from "next/link";
 import Image from "next/image";
 
 const LINKS = {
-  Product: ["Features", "Pricing", "Certifications", "How it Works"],
-  Company: ["About", "Blog", "Careers", "Contact"],
-  Legal: ["Privacy Policy", "Terms of Service", "Cookie Policy"],
+  Product: [
+    { label: "Features", href: "/#how-it-works" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "Certifications", href: "/#certifications" },
+    { label: "How it Works", href: "/#how-it-works" },
+  ],
+  Company: [
+    { label: "About", href: "/about" },
+    { label: "Contact", href: "/contact" },
+  ],
+  Legal: [
+    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Terms of Service", href: "/terms" },
+    { label: "Cookie Policy", href: "/cookies" },
+  ],
 };
 
 export default function Footer() {
@@ -20,7 +32,7 @@ export default function Footer() {
                 alt="Readymetry"
                 width={480}
                 height={144}
-                className="h-[134px] w-auto"
+                className="h-12 w-auto"
               />
             </div>
             <p className="text-xs text-muted leading-relaxed max-w-[180px]">
@@ -36,12 +48,12 @@ export default function Footer() {
               </p>
               <ul className="flex flex-col gap-2.5">
                 {items.map((item) => (
-                  <li key={item}>
+                  <li key={item.label}>
                     <Link
-                      href="#"
+                      href={item.href}
                       className="text-sm text-muted hover:text-foreground transition-colors"
                     >
-                      {item}
+                      {item.label}
                     </Link>
                   </li>
                 ))}

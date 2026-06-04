@@ -5,6 +5,8 @@ import HowItWorks from "@/components/marketing/HowItWorks";
 import CTABanner from "@/components/marketing/CTABanner";
 import Footer from "@/components/marketing/Footer";
 
+export const dynamic = "force-dynamic";
+
 export default function LandingPage() {
   return (
     <>

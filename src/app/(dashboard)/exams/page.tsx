@@ -5,37 +5,25 @@ import { useRouter } from "next/navigation";
 import { BookOpen, Timer, ChevronRight, Loader2, Lock, ShoppingCart } from "lucide-react";
 import { createCheckoutSession } from "@/lib/actions/billing";
 import { ROUTES } from "@/lib/constants";
-import { startExamSession } from "@/lib/actions/exams";
+import { getExamCatalog, startExamSession } from "@/lib/actions/exams";
 
-const CERTS = [
-  { id: "11111111-0000-0000-0000-000000000001", label: "AWS CWI", sub: "Certified Welding Inspector" },
-  { id: "11111111-0000-0000-0000-000000000002", label: "ASNT NDT Level II", sub: "PT · MT · UT · RT", disabled: true },
-];
-
-const TOPICS: Record<string, { id: string; label: string }[]> = {
-  "11111111-0000-0000-0000-000000000001": [
-    { id: "Welding Processes", label: "Welding Processes" },
-    { id: "Metallurgy", label: "Metallurgy" },
-    { id: "Visual Inspection", label: "Visual Inspection" },
-    { id: "Weld Symbols", label: "Weld Symbols" },
-    { id: "Codes & Documents", label: "Codes & Documents" },
-    { id: "Weld Discontinuities", label: "Discontinuities" },
-    { id: "NDE Methods", label: "NDE Methods" },
-  ],
-  "11111111-0000-0000-0000-000000000002": [
-    { id: "PT", label: "PT" },
-    { id: "MT", label: "MT" },
-    { id: "UT", label: "UT" },
-    { id: "RT", label: "RT" },
-  ],
-};
+interface Certification {
+  id: string;
+  code: string;
+  name: string;
+  body: string;
+  available: boolean;
+  actualQuestionCount: number;
+  categories: string[];
+}
 
 const QUESTION_COUNTS = [10, 25, 50];
 const DIFFICULTIES = ["Any", "Easy", "Medium", "Hard"];
 
 export default function ExamsPage() {
   const router = useRouter();
-  const [cert, setCert] = useState(CERTS[0].id);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [cert, setCert] = useState("");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [questionCount, setQuestionCount] = useState(10);
   const [difficulty, setDifficulty] = useState("Any");
@@ -48,6 +36,12 @@ export default function ExamsPage() {
 
   useEffect(() => {
     fetch("/api/billing/status").then((r) => r.json()).then(setBilling).catch(() => null);
+    getExamCatalog()
+      .then((catalog: Certification[]) => {
+        setCertifications(catalog);
+        setCert(catalog.find((item) => item.available)?.id ?? catalog[0]?.id ?? "");
+      })
+      .catch(() => setError("Could not load the certification catalog."));
   }, []);
 
   const toggleTopic = (id: string) => {
@@ -83,7 +77,8 @@ export default function ExamsPage() {
     }
   };
 
-  const certTopics = TOPICS[cert] ?? [];
+  const selectedCertification = certifications.find((item) => item.id === cert);
+  const certTopics = selectedCertification?.categories ?? [];
 
   const handleBuyCredits = async () => {
     setBuyingCredits(true);
@@ -135,7 +130,7 @@ export default function ExamsPage() {
                 className="hidden"
               />
               <a href="/plan" className="w-full py-3 rounded-xl border border-border text-sm font-medium text-muted hover:bg-surface transition-colors text-center">
-                Upgrade to Ready (unlimited)
+                Get Readiness Pack (5 exams)
               </a>
               <button onClick={() => setShowCreditModal(false)} className="text-xs text-muted hover:text-foreground">
                 Cancel
@@ -155,22 +150,23 @@ export default function ExamsPage() {
           <div className="bg-white rounded-2xl border border-border p-6">
             <p className="text-sm font-semibold text-foreground mb-3">Certification</p>
             <div className="grid grid-cols-2 gap-3">
-              {CERTS.map((c) => (
+              {certifications.map((c) => (
                 <button
                   key={c.id}
-                  disabled={c.disabled}
+                  disabled={!c.available}
                   onClick={() => { setCert(c.id); setSelectedTopics([]); }}
                   className={`rounded-xl border p-4 text-left transition-all ${
-                    c.disabled ? "opacity-40 cursor-not-allowed border-border" :
+                    !c.available ? "opacity-40 cursor-not-allowed border-border" :
                     cert === c.id
                       ? "border-brand-600 bg-brand-50"
                       : "border-border hover:border-brand-200"
                   }`}
                 >
                   <p className={`text-sm font-bold ${cert === c.id ? "text-brand-700" : "text-foreground"}`}>
-                    {c.label}
+                    {c.code}
                   </p>
-                  <p className="text-xs text-muted mt-0.5">{c.sub}</p>
+                  <p className="text-xs text-muted mt-0.5">{c.name}</p>
+                  <p className="text-[11px] text-muted mt-2">{c.actualQuestionCount} questions available</p>
                 </button>
               ))}
             </div>
@@ -182,9 +178,7 @@ export default function ExamsPage() {
               <p className="text-sm font-semibold text-foreground">Topics</p>
               <button
                 onClick={() =>
-                  setSelectedTopics(
-                    selectedTopics.length === certTopics.length ? [] : certTopics.map((t) => t.id)
-                  )
+                  setSelectedTopics(selectedTopics.length === certTopics.length ? [] : certTopics)
                 }
                 className="text-xs text-brand-700 hover:underline"
               >
@@ -192,17 +186,17 @@ export default function ExamsPage() {
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {certTopics.map((t) => (
+              {certTopics.map((topic) => (
                 <button
-                  key={t.id}
-                  onClick={() => toggleTopic(t.id)}
+                  key={topic}
+                  onClick={() => toggleTopic(topic)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                    selectedTopics.includes(t.id)
+                    selectedTopics.includes(topic)
                       ? "bg-brand-700 text-white border-brand-700"
                       : "bg-white text-muted border-border hover:border-brand-300"
                   }`}
                 >
-                  {t.label}
+                  {topic}
                 </button>
               ))}
             </div>
@@ -274,7 +268,7 @@ export default function ExamsPage() {
             <p className="text-sm font-semibold text-foreground mb-4">Test Summary</p>
             <div className="flex flex-col gap-3 mb-6">
               {[
-                { label: "Certification", value: CERTS.find((c) => c.id === cert)?.label },
+                { label: "Certification", value: selectedCertification?.code ?? "Loading" },
                 { label: "Topics", value: selectedTopics.length === 0 ? "All topics" : `${selectedTopics.length} selected` },
                 { label: "Questions", value: questionCount },
                 { label: "Difficulty", value: difficulty },
@@ -289,7 +283,7 @@ export default function ExamsPage() {
 
             <button
               onClick={handleGenerate}
-              disabled={loading}
+              disabled={loading || !selectedCertification?.available}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-700 text-white text-sm font-semibold hover:bg-brand-800 disabled:opacity-60 transition-colors shadow-[0_4px_14px_rgba(109,40,217,0.3)]"
             >
               {loading ? <Loader2 size={16} className="animate-spin" /> : <><BookOpen size={15} /> Generate Test</>}

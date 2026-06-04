@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, BookOpen, BarChart2, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, BarChart2, Settings, LogOut, LifeBuoy } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/actions/account";
@@ -12,6 +12,7 @@ const NAV = [
   { icon: LayoutDashboard, label: "Dashboard", href: ROUTES.dashboard },
   { icon: BookOpen, label: "Practice Tests", href: ROUTES.exams },
   { icon: BarChart2, label: "Analytics", href: ROUTES.analytics },
+  { icon: LifeBuoy, label: "Support", href: ROUTES.support },
   { icon: Settings, label: "Settings", href: ROUTES.settings },
 ];
 
@@ -23,7 +24,7 @@ export default function DashboardSidebar({ name, subtitle }: { name: string; sub
     <aside className="w-full bg-[#2E1065] flex flex-col h-full">
       <div className="p-4 pb-3">
         <div className="bg-white rounded-xl px-3 py-2 inline-block">
-          <Image src="/logo.png" alt="Readymetry" width={480} height={144} className="h-[134px] w-auto" />
+          <Image src="/logo.png" alt="Readymetry" width={480} height={144} className="h-10 w-auto" />
         </div>
       </div>
 

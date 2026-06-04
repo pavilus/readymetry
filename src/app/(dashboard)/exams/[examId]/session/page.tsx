@@ -1,12 +1,12 @@
 "use client";
-/* eslint-disable react-hooks/purity, react-hooks/set-state-in-effect */
+/* eslint-disable react-hooks/purity */
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Flag, Clock, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ROUTES } from "@/lib/constants";
-import { submitExamSession } from "@/lib/actions/exams";
+import { resumeExamSession, saveExamProgress, submitExamSession } from "@/lib/actions/exams";
 
 interface Question {
   id: string;
@@ -53,24 +53,42 @@ export default function ExamSessionPage() {
   const questionTimes = useRef<number[]>([]);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem(`session_${examId}`);
-    if (!raw) {
-      router.push(ROUTES.exams);
-      return;
-    }
-    const qs: Question[] = JSON.parse(raw);
-    const savedRaw = sessionStorage.getItem(`progress_${examId}`);
-    const saved: SavedProgress | null = savedRaw ? JSON.parse(savedRaw) : null;
-    setQuestions(qs);
-    setAnswers(saved?.answers.length === qs.length ? saved.answers : Array(qs.length).fill(null));
-    setConfidences(saved?.confidences.length === qs.length ? saved.confidences : Array(qs.length).fill(null));
-    setFlagged(saved?.flagged.length === qs.length ? saved.flagged : Array(qs.length).fill(false));
-    setCurrent(saved ? Math.min(saved.current, qs.length - 1) : 0);
-    setTimeLeft(saved?.timeLeft ?? qs.length * 90);
-    questionTimes.current = saved?.questionTimes.length === qs.length ? saved.questionTimes : Array(qs.length).fill(0);
-    startTime.current = Date.now() - ((saved?.elapsedSeconds ?? 0) * 1000);
-    questionStartTime.current = Date.now();
-    setLoading(false);
+    let cancelled = false;
+    const hydrate = (qs: Question[], saved: SavedProgress | null) => {
+      if (cancelled) return;
+      setQuestions(qs);
+      setAnswers(saved?.answers.length === qs.length ? saved.answers : Array(qs.length).fill(null));
+      setConfidences(saved?.confidences.length === qs.length ? saved.confidences : Array(qs.length).fill(null));
+      setFlagged(saved?.flagged.length === qs.length ? saved.flagged : Array(qs.length).fill(false));
+      setCurrent(saved ? Math.min(saved.current, qs.length - 1) : 0);
+      setTimeLeft(saved?.timeLeft ?? qs.length * 90);
+      questionTimes.current = saved?.questionTimes.length === qs.length ? saved.questionTimes : Array(qs.length).fill(0);
+      startTime.current = Date.now() - ((saved?.elapsedSeconds ?? 0) * 1000);
+      questionStartTime.current = Date.now();
+      setLoading(false);
+    };
+    const load = async () => {
+      const raw = sessionStorage.getItem(`session_${examId}`);
+      const savedRaw = sessionStorage.getItem(`progress_${examId}`);
+      if (raw) {
+        hydrate(JSON.parse(raw), savedRaw ? JSON.parse(savedRaw) : null);
+        return;
+      }
+      const resumed = await resumeExamSession(examId);
+      if (!resumed?.questions.length) {
+        router.push(ROUTES.exams);
+        return;
+      }
+      sessionStorage.setItem(`session_${examId}`, JSON.stringify(resumed.questions));
+      if (resumed.progress) sessionStorage.setItem(`progress_${examId}`, JSON.stringify(resumed.progress));
+      const progress = resumed.progress as SavedProgress | null;
+      hydrate(
+        resumed.questions as Question[],
+        progress ? { ...progress, timeLeft: resumed.remainingSeconds ?? progress.timeLeft } : null,
+      );
+    };
+    void load();
+    return () => { cancelled = true; };
   }, [examId, router]);
 
   useEffect(() => {
@@ -85,6 +103,7 @@ export default function ExamSessionPage() {
       questionTimes: questionTimes.current,
     };
     sessionStorage.setItem(`progress_${examId}`, JSON.stringify(progress));
+    if (timeLeft % 10 === 0) void saveExamProgress(examId, progress).catch(() => null);
   }, [answers, confidences, current, examId, flagged, loading, questions.length, timeLeft]);
 
   useEffect(() => {

@@ -12,6 +12,46 @@ export interface StartSessionOptions {
   examType: "practice" | "timed_simulation";
 }
 
+export async function getExamCatalog() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const admin = adminClient();
+  const [{ data: certifications, error: certError }, { data: questions, error: questionError }] = await Promise.all([
+    admin.from("certifications").select("id, code, name, body, available, question_count").order("code"),
+    admin.from("questions").select("certification_id, category"),
+  ]);
+  if (certError) throw new Error(certError.message);
+  if (questionError) throw new Error(questionError.message);
+
+  const details = new Map<string, { count: number; categories: Set<string> }>();
+  for (const question of questions ?? []) {
+    const current = details.get(question.certification_id) ?? { count: 0, categories: new Set<string>() };
+    current.count += 1;
+    current.categories.add(question.category);
+    details.set(question.certification_id, current);
+  }
+
+  return (certifications ?? []).map((certification: {
+    id: string;
+    code: string;
+    name: string;
+    body: string;
+    available: boolean;
+    question_count: number;
+  }) => {
+    const questionDetails = details.get(certification.id);
+    const actualQuestionCount = questionDetails?.count ?? 0;
+    return {
+      ...certification,
+      actualQuestionCount,
+      available: certification.available && actualQuestionCount > 0,
+      categories: [...(questionDetails?.categories ?? [])].sort(),
+    };
+  });
+}
+
 export async function startExamSession(opts: StartSessionOptions) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -53,6 +93,10 @@ export async function startExamSession(opts: StartSessionOptions) {
       total_questions: shuffled.length,
       categories: opts.categories.length > 0 ? opts.categories : null,
       question_ids: shuffled.map((question: { id: string }) => question.id),
+      remaining_seconds: opts.examType === "timed_simulation" ? shuffled.length * 90 : null,
+      expires_at: opts.examType === "timed_simulation"
+        ? new Date(Date.now() + shuffled.length * 90 * 1000).toISOString()
+        : null,
     })
     .select()
     .single();
@@ -99,6 +143,74 @@ export interface SubmitSessionPayload {
   timeTakenSeconds: number;
 }
 
+export interface ExamProgress {
+  answers: (string | null)[];
+  confidences: ("confident" | "unsure" | "guessing" | null)[];
+  flagged: boolean[];
+  current: number;
+  timeLeft: number;
+  elapsedSeconds: number;
+  questionTimes: number[];
+}
+
+export async function saveExamProgress(sessionId: string, progress: ExamProgress) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const admin = adminClient();
+  const { data: session } = await admin
+    .from("exam_sessions")
+    .select("exam_type, expires_at")
+    .eq("id", sessionId)
+    .eq("user_id", user.id)
+    .eq("status", "in_progress")
+    .maybeSingle();
+  if (!session) throw new Error("Exam session not found");
+  if (session.exam_type === "timed_simulation" && session.expires_at && new Date(session.expires_at).getTime() <= Date.now()) {
+    throw new Error("Timed exam has ended");
+  }
+
+  const { error } = await admin
+    .from("exam_sessions")
+    .update({ progress, remaining_seconds: Math.max(0, progress.timeLeft) })
+    .eq("id", sessionId)
+    .eq("user_id", user.id)
+    .eq("status", "in_progress");
+  if (error) throw new Error(error.message);
+}
+
+export async function resumeExamSession(sessionId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const admin = adminClient();
+  const { data: session, error } = await admin
+    .from("exam_sessions")
+    .select("id, status, question_ids, progress, remaining_seconds, exam_type, expires_at")
+    .eq("id", sessionId)
+    .eq("user_id", user.id)
+    .eq("status", "in_progress")
+    .maybeSingle();
+  if (error || !session?.question_ids?.length) return null;
+
+  const { data: questions, error: questionError } = await admin
+    .from("questions")
+    .select("id, certification_id, category, subcategory, body, options, difficulty, reference")
+    .in("id", session.question_ids);
+  if (questionError) throw new Error(questionError.message);
+  const byId = new Map((questions ?? []).map((question: { id: string }) => [question.id, question]));
+
+  return {
+    questions: session.question_ids.map((id: string) => byId.get(id)).filter(Boolean),
+    progress: session.progress,
+    remainingSeconds: session.exam_type === "timed_simulation" && session.expires_at
+      ? Math.max(0, Math.floor((new Date(session.expires_at).getTime() - Date.now()) / 1000))
+      : session.remaining_seconds,
+  };
+}
+
 export async function submitExamSession(payload: SubmitSessionPayload) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -107,7 +219,7 @@ export async function submitExamSession(payload: SubmitSessionPayload) {
   const admin = adminClient();
   const { data: session, error: sessionErr } = await admin
     .from("exam_sessions")
-    .select("id, status, question_ids")
+    .select("id, status, question_ids, exam_type, expires_at, progress")
     .eq("id", payload.sessionId)
     .eq("user_id", user.id)
     .single();
@@ -116,7 +228,15 @@ export async function submitExamSession(payload: SubmitSessionPayload) {
   if (session.status !== "in_progress") throw new Error("Exam session has already been submitted");
   if (!payload.answers.length) throw new Error("No answers submitted");
 
-  const questionIds = payload.answers.map((a) => a.questionId);
+  const timedExpired = session.exam_type === "timed_simulation"
+    && session.expires_at
+    && new Date(session.expires_at).getTime() <= Date.now();
+  const expiredProgress = timedExpired ? session.progress as ExamProgress | null : null;
+  const submittedAnswers = timedExpired
+    ? payload.answers.map((answer, index) => ({ ...answer, selectedAnswer: expiredProgress?.answers[index] ?? "" }))
+    : payload.answers;
+
+  const questionIds = submittedAnswers.map((a) => a.questionId);
   if (new Set(questionIds).size !== questionIds.length) throw new Error("Duplicate answers submitted");
 
   const allowedIds = new Set((session.question_ids ?? []) as string[]);
@@ -133,7 +253,7 @@ export async function submitExamSession(payload: SubmitSessionPayload) {
 
   const correctMap = Object.fromEntries((questions as { id: string; correct_answer: string }[]).map((q) => [q.id, q.correct_answer]));
 
-  const answerRows = payload.answers.map((a) => ({
+  const answerRows = submittedAnswers.map((a) => ({
     session_id: payload.sessionId,
     question_id: a.questionId,
     selected_answer: a.selectedAnswer,
@@ -159,6 +279,8 @@ export async function submitExamSession(payload: SubmitSessionPayload) {
       correct_answers: correct,
       time_taken_seconds: payload.timeTakenSeconds,
       completed_at: new Date().toISOString(),
+      progress: null,
+      remaining_seconds: 0,
     })
     .eq("id", payload.sessionId)
     .eq("user_id", user.id);

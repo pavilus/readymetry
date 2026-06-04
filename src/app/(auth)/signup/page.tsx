@@ -123,8 +123,8 @@ export default function SignupPage() {
 
         <p className="text-center text-[11px] text-muted leading-relaxed">
           By creating an account you agree to our{" "}
-          <Link href="#" className="underline hover:text-foreground">Terms of Service</Link>{" "}and{" "}
-          <Link href="#" className="underline hover:text-foreground">Privacy Policy</Link>.
+          <Link href={ROUTES.terms} className="underline hover:text-foreground">Terms of Service</Link>{" "}and{" "}
+          <Link href={ROUTES.privacy} className="underline hover:text-foreground">Privacy Policy</Link>.
         </p>
       </form>}
     </AuthCard>

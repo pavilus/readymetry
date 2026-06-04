@@ -1,5 +1,5 @@
 import { adminClient } from "@/lib/supabase/admin";
-import { Users, BookOpen, CircleCheckBig, Library } from "lucide-react";
+import { Users, BookOpen, MessageSquare, Library } from "lucide-react";
 
 export default async function AdminOverviewPage() {
   const db  = adminClient();
@@ -9,6 +9,7 @@ export default async function AdminOverviewPage() {
   const [
     totalUsers, newUsers,
     totalSessions, completedSessions,
+    openTickets,
     totalQuestions,
     recentUsers,
   ] = await Promise.all([
@@ -16,6 +17,7 @@ export default async function AdminOverviewPage() {
     db.from("user_profiles").select("id", { count: "exact", head: true }).gte("created_at", day30ago),
     db.from("exam_sessions").select("id", { count: "exact", head: true }),
     db.from("exam_sessions").select("id", { count: "exact", head: true }).eq("status", "completed"),
+    db.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["open", "in_progress"]),
     db.from("questions").select("id", { count: "exact", head: true }),
     db.from("user_profiles").select("id, full_name, role, created_at").order("created_at", { ascending: false }).limit(8),
   ]);
@@ -41,10 +43,10 @@ export default async function AdminOverviewPage() {
       color: "text-emerald-600 bg-emerald-50",
     },
     {
-      label: "Completed Exams",
-      value: (completedSessions.count ?? 0).toLocaleString(),
-      sub: `${totalSessions.count ?? 0} total sessions`,
-      icon: CircleCheckBig,
+      label: "Open Tickets",
+      value: (openTickets.count ?? 0).toLocaleString(),
+      sub: "Awaiting support",
+      icon: MessageSquare,
       color: "text-amber-600 bg-amber-50",
     },
     {

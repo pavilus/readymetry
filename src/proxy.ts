@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Require auth; plan check happens in dashboard server component
-const PROTECTED_PREFIXES = ["/dashboard", "/exams", "/results", "/analytics", "/settings", "/onboarding", "/plan", "/checkout", "/admin"];
+const PROTECTED_PREFIXES = ["/dashboard", "/exams", "/results", "/analytics", "/settings", "/support", "/onboarding", "/plan", "/checkout", "/admin"];
 // Redirect logged-in users away from these
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 

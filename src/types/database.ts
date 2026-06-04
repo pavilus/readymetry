@@ -151,6 +151,9 @@ export interface Database {
           time_taken_seconds: number | null;
           categories: string[] | null;
           question_ids: string[] | null;
+          progress: Json | null;
+          remaining_seconds: number | null;
+          expires_at: string | null;
           started_at: string;
           completed_at: string | null;
         };
@@ -166,6 +169,9 @@ export interface Database {
           time_taken_seconds?: number | null;
           categories?: string[] | null;
           question_ids?: string[] | null;
+          progress?: Json | null;
+          remaining_seconds?: number | null;
+          expires_at?: string | null;
           completed_at?: string | null;
         };
         Update: Partial<{
@@ -175,6 +181,9 @@ export interface Database {
           time_taken_seconds: number | null;
           completed_at: string | null;
           question_ids: string[] | null;
+          progress: Json | null;
+          remaining_seconds: number | null;
+          expires_at: string | null;
         }>;
       };
       user_answers: {
@@ -206,6 +215,29 @@ export interface Database {
           confidence_level: "confident" | "unsure" | "guessing" | null;
           flagged: boolean;
         }>;
+      };
+      support_tickets: {
+        Row: {
+          id: string;
+          ticket_number: number;
+          user_id: string;
+          subject: string;
+          category: "general" | "account" | "exam" | "technical";
+          message: string;
+          status: "open" | "in_progress" | "resolved" | "closed";
+          priority: "low" | "medium" | "high" | "urgent";
+          internal_notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          subject: string;
+          category?: "general" | "account" | "exam" | "technical";
+          message: string;
+        };
+        Update: never;
       };
     };
     Views: Record<string, never>;

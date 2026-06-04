@@ -5,6 +5,12 @@ export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://readymetry.co
 export const ROUTES = {
   home: "/",
   pricing: "/pricing",
+  certifications: "/#certifications",
+  about: "/about",
+  contact: "/contact",
+  privacy: "/privacy",
+  terms: "/terms",
+  cookies: "/cookies",
   login: "/login",
   signup: "/signup",
   forgotPassword: "/forgot-password",
@@ -16,6 +22,7 @@ export const ROUTES = {
   exams: "/exams",
   analytics: "/analytics",
   settings: "/settings",
+  support: "/support",
   exam: (examId: string) => `/exams/${examId}`,
   examSession: (examId: string) => `/exams/${examId}/session`,
   results: (sessionId: string) => `/results/${sessionId}`,
@@ -129,33 +136,3 @@ export const PRICING_TIERS = [
 ] as const;
 
 export type PricingProductKey = "free" | "single_exam" | "readiness_pack" | "workforce";
-
-export const CERT_CATEGORIES = [
-  {
-    id: "cwi",
-    code: "AWS CWI",
-    name: "Certified Welding Inspector",
-    body: "American Welding Society",
-    questionCount: 150,
-    examDuration: 180,
-    available: true,
-  },
-  {
-    id: "api-570",
-    code: "API 570",
-    name: "Piping Inspector",
-    body: "API",
-    questionCount: 70,
-    examDuration: 90,
-    available: false,
-  },
-  {
-    id: "cweng",
-    code: "AWS CWEng",
-    name: "Certified Welding Engineer",
-    body: "American Welding Society",
-    questionCount: 200,
-    examDuration: 240,
-    available: false,
-  },
-] as const;
