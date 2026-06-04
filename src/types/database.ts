@@ -45,6 +45,13 @@ export interface Database {
           avatar_url: string | null;
           role: "user" | "admin";
           subscription_tier: "starter" | "ready" | "workforce";
+          account_type: string;
+          organization_name: string | null;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          purchased_exam_credits: number;
+          plan_selected_at: string | null;
+          free_exam_consumed: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -54,12 +61,26 @@ export interface Database {
           avatar_url?: string | null;
           role?: "user" | "admin";
           subscription_tier?: "starter" | "ready" | "workforce";
+          account_type?: string;
+          organization_name?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          purchased_exam_credits?: number;
+          plan_selected_at?: string | null;
+          free_exam_consumed?: boolean;
         };
         Update: Partial<{
           full_name: string | null;
           avatar_url: string | null;
           role: "user" | "admin";
           subscription_tier: "starter" | "ready" | "workforce";
+          account_type: string;
+          organization_name: string | null;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          purchased_exam_credits: number;
+          plan_selected_at: string | null;
+          free_exam_consumed: boolean;
         }>;
       };
       user_certifications: {
@@ -129,6 +150,7 @@ export interface Database {
           correct_answers: number | null;
           time_taken_seconds: number | null;
           categories: string[] | null;
+          question_ids: string[] | null;
           started_at: string;
           completed_at: string | null;
         };
@@ -143,6 +165,7 @@ export interface Database {
           correct_answers?: number | null;
           time_taken_seconds?: number | null;
           categories?: string[] | null;
+          question_ids?: string[] | null;
           completed_at?: string | null;
         };
         Update: Partial<{
@@ -151,6 +174,7 @@ export interface Database {
           correct_answers: number | null;
           time_taken_seconds: number | null;
           completed_at: string | null;
+          question_ids: string[] | null;
         }>;
       };
       user_answers: {
@@ -161,6 +185,8 @@ export interface Database {
           selected_answer: string;
           is_correct: boolean;
           time_spent_seconds: number | null;
+          confidence_level: "confident" | "unsure" | "guessing" | null;
+          flagged: boolean;
           created_at: string;
         };
         Insert: {
@@ -170,11 +196,15 @@ export interface Database {
           selected_answer: string;
           is_correct: boolean;
           time_spent_seconds?: number | null;
+          confidence_level?: "confident" | "unsure" | "guessing" | null;
+          flagged?: boolean;
         };
         Update: Partial<{
           selected_answer: string;
           is_correct: boolean;
           time_spent_seconds: number | null;
+          confidence_level: "confident" | "unsure" | "guessing" | null;
+          flagged: boolean;
         }>;
       };
     };
@@ -187,6 +217,28 @@ export interface Database {
       get_category_breakdown: {
         Args: { p_user_id: string; p_certification_id: string };
         Returns: Array<{ category: string; accuracy: number; question_count: number }>;
+      };
+      consume_exam_access: {
+        Args: { p_user_id: string };
+        Returns: string;
+      };
+      refund_exam_access: {
+        Args: { p_user_id: string; p_access_type: string };
+        Returns: undefined;
+      };
+      increment_exam_credits: {
+        Args: { p_user_id: string; p_amount?: number };
+        Returns: undefined;
+      };
+      fulfill_stripe_purchase: {
+        Args: {
+          p_event_id: string;
+          p_event_type: string;
+          p_user_id: string;
+          p_product: string;
+          p_customer_id?: string | null;
+        };
+        Returns: boolean;
       };
     };
     Enums: Record<string, never>;

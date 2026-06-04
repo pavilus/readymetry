@@ -23,29 +23,20 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = adminSupabase();
-
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const userId = session.metadata?.user_id;
     const product = session.metadata?.product;
-    if (!userId) return NextResponse.json({ received: true });
+    if (!userId || !product) return NextResponse.json({ error: "Missing checkout metadata" }, { status: 400 });
 
-    if (product === "single_exam") {
-      // Add 1 exam credit, keep starter tier, mark plan as selected
-      await supabase.rpc("increment_exam_credits", { p_user_id: userId, p_amount: 1 });
-      await supabase.from("user_profiles")
-        .update({ plan_selected_at: new Date().toISOString() })
-        .eq("id", userId)
-        .is("plan_selected_at", null); // only set if not already set
-    } else if (product === "readiness_pack") {
-      // Full analytics unlock + 5 exam credits
-      await supabase.from("user_profiles").update({
-        subscription_tier: "ready",
-        stripe_customer_id: session.customer as string,
-        plan_selected_at: new Date().toISOString(),
-      }).eq("id", userId);
-      await supabase.rpc("increment_exam_credits", { p_user_id: userId, p_amount: 5 });
-    }
+    const { error } = await supabase.rpc("fulfill_stripe_purchase", {
+      p_event_id: event.id,
+      p_event_type: event.type,
+      p_user_id: userId,
+      p_product: product,
+      p_customer_id: typeof session.customer === "string" ? session.customer : null,
+    });
+    if (error) return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

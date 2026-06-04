@@ -11,7 +11,6 @@ interface Question {
   id: string;
   body: string;
   options: { key: string; text: string }[];
-  correct_answer: string;
   category: string;
   difficulty: string;
 }
@@ -114,6 +113,8 @@ export default function ExamSessionPage() {
       questionId: q.id,
       selectedAnswer: answers[i] ?? "",
       timeSpentSeconds: Math.round((questionTimes.current[i] ?? 0) / 1000),
+      confidenceLevel: confidences[i],
+      flagged: flagged[i],
     }));
 
     try {

@@ -54,8 +54,9 @@ export async function createCheckoutSession(product: PurchaseType) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://readymetry.com";
 
   const priceId = product === "single_exam"
-    ? process.env.STRIPE_SINGLE_EXAM_PRICE_ID!
-    : process.env.STRIPE_READINESS_PACK_PRICE_ID!;
+    ? process.env.STRIPE_SINGLE_EXAM_PRICE_ID
+    : process.env.STRIPE_READINESS_PACK_PRICE_ID;
+  if (!priceId) throw new Error(`Stripe price is not configured for ${product}`);
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
@@ -79,7 +80,7 @@ export async function getBillingStatus() {
 
   const { data } = await (supabase as any)
     .from("user_profiles")
-    .select("subscription_tier, plan_selected_at, purchased_exam_credits, account_type, organization_name")
+    .select("subscription_tier, plan_selected_at, purchased_exam_credits, free_exam_consumed, account_type, organization_name")
     .eq("id", user.id)
     .single();
 
@@ -103,7 +104,7 @@ export async function getBillingStatus() {
     accountType: data.account_type as "individual" | "enterprise",
     organizationName: data.organization_name as string | null,
     // starter = 1 free exam; after that, need credits or upgrade
-    canStartExam: tier !== "starter" || completedSessions === 0 || examCredits > 0,
+    canStartExam: tier === "workforce" || !data.free_exam_consumed || examCredits > 0,
     hasFullAnalytics: tier === "ready" || tier === "workforce",
   };
 }
