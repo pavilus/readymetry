@@ -60,7 +60,8 @@ export default function ReviewPage() {
   const toggleBookmark = (id: string) => {
     setBookmarked((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       localStorage.setItem(`bookmarks_${sessionId}`, JSON.stringify([...next]));
       return next;
     });
@@ -69,7 +70,8 @@ export default function ReviewPage() {
   const toggleExpanded = (id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };

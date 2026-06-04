@@ -41,9 +41,14 @@ export async function getAnalyticsData() {
     }));
 
   // Category breakdown
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const analyticsClient = supabase as unknown as {
+    rpc: (
+      name: "get_category_breakdown",
+      args: { p_user_id: string; p_certification_id: string },
+    ) => Promise<{ data: { category: string; accuracy: number; question_count: number }[] | null }>;
+  };
   const breakdown = certId
-    ? await (supabase as any).rpc("get_category_breakdown", { p_user_id: user.id, p_certification_id: certId })
+    ? await analyticsClient.rpc("get_category_breakdown", { p_user_id: user.id, p_certification_id: certId })
     : { data: [] };
 
   // Aggregate stats
@@ -58,7 +63,7 @@ export async function getAnalyticsData() {
     const dates = [...new Set(sessions.map((s) =>
       new Date(s.completed_at!).toDateString()
     ))];
-    let check = new Date();
+    const check = new Date();
     for (const d of dates) {
       if (new Date(d).toDateString() === check.toDateString()) {
         streak++;

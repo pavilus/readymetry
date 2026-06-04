@@ -63,7 +63,7 @@ export async function createCheckoutSession(product: PurchaseType) {
     customer: customerId,
     mode: "payment",
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${appUrl}/checkout/success?plan=${product}`,
+    success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/pricing`,
     metadata: { user_id: user.id, product },
     allow_promotion_codes: true,

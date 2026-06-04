@@ -37,7 +37,7 @@ export default function PricingCards({
       return;
     }
     if (pricingType === "contact") {
-      window.location.href = "mailto:hello@readymetry.com?subject=Workforce%20Plan%20Inquiry";
+      window.location.assign("mailto:hello@readymetry.com?subject=Workforce%20Plan%20Inquiry");
       return;
     }
     router.push(ROUTES.signup);

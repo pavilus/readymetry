@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/purity, react-hooks/set-state-in-effect */
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -13,6 +14,16 @@ interface Question {
   options: { key: string; text: string }[];
   category: string;
   difficulty: string;
+}
+
+interface SavedProgress {
+  answers: (string | null)[];
+  confidences: Confidence[];
+  flagged: boolean[];
+  current: number;
+  timeLeft: number;
+  elapsedSeconds: number;
+  questionTimes: number[];
 }
 
 type Confidence = "confident" | "unsure" | "guessing" | null;
@@ -48,15 +59,33 @@ export default function ExamSessionPage() {
       return;
     }
     const qs: Question[] = JSON.parse(raw);
+    const savedRaw = sessionStorage.getItem(`progress_${examId}`);
+    const saved: SavedProgress | null = savedRaw ? JSON.parse(savedRaw) : null;
     setQuestions(qs);
-    setAnswers(Array(qs.length).fill(null));
-    setConfidences(Array(qs.length).fill(null));
-    setFlagged(Array(qs.length).fill(false));
-    setTimeLeft(qs.length * 90);
-    questionTimes.current = Array(qs.length).fill(0);
+    setAnswers(saved?.answers.length === qs.length ? saved.answers : Array(qs.length).fill(null));
+    setConfidences(saved?.confidences.length === qs.length ? saved.confidences : Array(qs.length).fill(null));
+    setFlagged(saved?.flagged.length === qs.length ? saved.flagged : Array(qs.length).fill(false));
+    setCurrent(saved ? Math.min(saved.current, qs.length - 1) : 0);
+    setTimeLeft(saved?.timeLeft ?? qs.length * 90);
+    questionTimes.current = saved?.questionTimes.length === qs.length ? saved.questionTimes : Array(qs.length).fill(0);
+    startTime.current = Date.now() - ((saved?.elapsedSeconds ?? 0) * 1000);
     questionStartTime.current = Date.now();
     setLoading(false);
   }, [examId, router]);
+
+  useEffect(() => {
+    if (loading || questions.length === 0) return;
+    const progress: SavedProgress = {
+      answers,
+      confidences,
+      flagged,
+      current,
+      timeLeft,
+      elapsedSeconds: Math.round((Date.now() - startTime.current) / 1000),
+      questionTimes: questionTimes.current,
+    };
+    sessionStorage.setItem(`progress_${examId}`, JSON.stringify(progress));
+  }, [answers, confidences, current, examId, flagged, loading, questions.length, timeLeft]);
 
   useEffect(() => {
     if (loading || submitting || questions.length === 0) return;
@@ -126,6 +155,7 @@ export default function ExamSessionPage() {
         timeTakenSeconds: totalTime,
       });
       sessionStorage.removeItem(`session_${examId}`);
+      sessionStorage.removeItem(`progress_${examId}`);
       router.push(ROUTES.results(examId));
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "We could not submit this exam. Please try again.");

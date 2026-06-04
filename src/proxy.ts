@@ -6,7 +6,7 @@ const PROTECTED_PREFIXES = ["/dashboard", "/exams", "/results", "/analytics", "/
 // Redirect logged-in users away from these
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

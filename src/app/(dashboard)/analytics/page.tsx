@@ -1,8 +1,13 @@
 import { getAnalyticsData } from "@/lib/actions/analytics";
 import AnalyticsCharts from "./AnalyticsCharts";
 import { StaggerList, StaggerItem } from "@/components/ui/FadeIn";
+import { getBillingStatus } from "@/lib/actions/billing";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/constants";
 
 export default async function AnalyticsPage() {
+  const billing = await getBillingStatus();
+  if (!billing?.hasFullAnalytics) redirect(ROUTES.pricing);
   const data = await getAnalyticsData();
 
   type Session = NonNullable<typeof data>["sessions"][number];

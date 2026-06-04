@@ -74,8 +74,19 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
 
   if (!data) redirect(ROUTES.dashboard);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { session, categoryBreakdown } = data as any;
+  type ResultsData = {
+    session: {
+      certifications: { code: string; name: string; passing_score: number };
+      score: number | null;
+      total_questions: number;
+      time_taken_seconds: number | null;
+      completed_at: string | null;
+      started_at: string;
+    };
+    categoryBreakdown: { category: string; accuracy: number; correct: number; total: number }[];
+    answers: { time_spent_seconds: number | null; is_correct: boolean; questions: { category: string } }[];
+  };
+  const { session, categoryBreakdown, answers } = data as unknown as ResultsData;
   const cert = session.certifications as { code: string; name: string; passing_score: number };
   const score = Math.round(session.score ?? 0);
   const passingScore = cert.passing_score ?? 72;
@@ -96,7 +107,6 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
   const { summary, recs } = generateFeedback(score, passingScore, categoryBreakdown, avgTimeSec);
 
   // Pacing data: time_taken_seconds per question from answers
-  const answers = (data as any).answers as { time_spent_seconds: number | null; is_correct: boolean; questions: { category: string } }[];
   const slowQuestions = answers.filter((a) => (a.time_spent_seconds ?? 0) > 120).length;
   const fastQuestions = answers.filter((a) => (a.time_spent_seconds ?? 0) < 20 && (a.time_spent_seconds ?? 0) > 0).length;
 

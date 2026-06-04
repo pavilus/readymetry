@@ -15,8 +15,6 @@ export default function CheckoutModal({ product, onClose, onConfirm }: CheckoutM
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<PricingProductKey>(product);
 
-  const isSingle = selected === "single_exam";
-
   const handleConfirm = async () => {
     setLoading(true);
     try {

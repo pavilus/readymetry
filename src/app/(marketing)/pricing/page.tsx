@@ -10,7 +10,7 @@ import ComparisonTable from "@/components/pricing/ComparisonTable";
 import CheckoutModal from "@/components/pricing/CheckoutModal";
 import { type PricingProductKey, ROUTES } from "@/lib/constants";
 import { useRouter } from "next/navigation";
-import { createCheckoutSession, selectStarterPlan } from "@/lib/actions/billing";
+import { createCheckoutSession } from "@/lib/actions/billing";
 
 const FAQ = [
   {
