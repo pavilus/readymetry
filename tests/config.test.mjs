@@ -12,6 +12,7 @@ test("required public and operational routes exist", () => {
     "src/app/(dashboard)/support/page.tsx",
     "src/app/sitemap.ts",
     "src/app/robots.ts",
+    "src/app/opengraph-image.tsx",
   ];
   for (const route of routes) assert.equal(fs.existsSync(route), true, `${route} is missing`);
 });

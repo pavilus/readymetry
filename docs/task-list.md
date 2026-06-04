@@ -28,7 +28,8 @@
 - [ ] Configure scheduled encrypted database backups and complete a restore drill
 - [ ] Build organization invitations, team dashboard, and reports
 - [ ] Archive or intentionally integrate `readymetry-api`
-- [ ] Add social preview image and broader browser/accessibility QA
+- [x] Add social preview image
+- [ ] Complete broader browser/accessibility QA
 
 ## Stripe work - last
 
