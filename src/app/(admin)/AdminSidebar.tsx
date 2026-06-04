@@ -3,15 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, BookOpen, MessageSquare, FileText, ExternalLink, Plug } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ExternalLink, Plug } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { icon: LayoutDashboard, label: "Overview",  href: "/admin" },
   { icon: Users,           label: "Users",     href: "/admin/users" },
   { icon: BookOpen,        label: "Questions", href: "/admin/questions" },
-  { icon: MessageSquare,   label: "Tickets",   href: "/admin/tickets" },
-  { icon: FileText,        label: "Audit Logs",href: "/admin/logs" },
   { icon: Plug,            label: "Integrations", href: "/admin/integrations" },
 ];
 

@@ -10,12 +10,12 @@ async function requireAdmin() {
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("role")
     .eq("id", user.id)
     .single();
 
-  const ok = ["admin", "super_admin"].includes((profile as any)?.role ?? "");
+  const ok = (profile as { role?: string } | null)?.role === "admin";
   if (!ok) redirect("/dashboard");
 
   return user;
@@ -23,8 +23,9 @@ async function requireAdmin() {
 
 export async function updateUserRole(userId: string, role: string) {
   await requireAdmin();
+  if (!["user", "admin"].includes(role)) throw new Error("Invalid role");
   const db = adminClient();
-  await db.from("profiles").update({ role, updated_at: new Date().toISOString() }).eq("id", userId);
+  await db.from("user_profiles").update({ role, updated_at: new Date().toISOString() }).eq("id", userId);
 }
 
 export async function createQuestion(formData: FormData) {
@@ -32,28 +33,21 @@ export async function createQuestion(formData: FormData) {
   const db = adminClient();
 
   const choices = ["A", "B", "C", "D"].map((id) => ({
-    id,
+    key: id,
     text: formData.get(`choice_${id}`) as string,
   }));
 
   await db.from("questions").insert({
     certification_id: formData.get("certification_id") as string,
-    domain:           formData.get("domain") as string,
-    section:          (formData.get("section") as string) || null,
+    category:         formData.get("category") as string,
+    subcategory:      (formData.get("subcategory") as string) || null,
     difficulty:       formData.get("difficulty") as string,
-    question_text:    formData.get("question_text") as string,
-    answer_choices:   choices,
+    body:             formData.get("body") as string,
+    options:          choices,
     correct_answer:   formData.get("correct_answer") as string,
     explanation:      formData.get("explanation") as string,
-    estimated_time:   parseInt(formData.get("estimated_time") as string) || 60,
-    active:           true,
+    reference:        (formData.get("reference") as string) || null,
   });
 
   redirect("/admin/questions");
-}
-
-export async function toggleQuestionActive(questionId: string, active: boolean) {
-  await requireAdmin();
-  const db = adminClient();
-  await db.from("questions").update({ active, updated_at: new Date().toISOString() }).eq("id", questionId);
 }

@@ -13,7 +13,7 @@ export default async function NewQuestionPage() {
       </div>
 
       <form action={createQuestion} className="space-y-6">
-        {/* Cert + domain + section */}
+        {/* Certification and classification */}
         <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
           <h2 className="text-sm font-semibold text-foreground">Classification</h2>
           <div className="grid grid-cols-2 gap-4">
@@ -44,9 +44,9 @@ export default async function NewQuestionPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">Domain</label>
+              <label className="block text-xs font-medium text-muted mb-1">Category</label>
               <input
-                name="domain"
+                name="category"
                 type="text"
                 required
                 placeholder="e.g. Welding Symbols"
@@ -54,25 +54,14 @@ export default async function NewQuestionPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">Section (optional)</label>
+              <label className="block text-xs font-medium text-muted mb-1">Subcategory (optional)</label>
               <input
-                name="section"
+                name="subcategory"
                 type="text"
                 placeholder="e.g. Part B"
                 className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted mb-1">Estimated Time (seconds)</label>
-            <input
-              name="estimated_time"
-              type="number"
-              defaultValue={60}
-              min={10}
-              max={300}
-              className="w-32 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
           </div>
         </div>
 
@@ -80,12 +69,18 @@ export default async function NewQuestionPage() {
         <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
           <h2 className="text-sm font-semibold text-foreground">Question</h2>
           <textarea
-            name="question_text"
+            name="body"
             required
             rows={4}
             placeholder="Enter the question text…"
             className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
           />
+        </div>
+
+        <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-foreground">Reference</h2>
+          <input name="reference" type="text" placeholder="e.g. AWS D1.1 Clause 6.9"
+            className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
 
         {/* Answer choices */}

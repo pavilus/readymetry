@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [confirmationSent, setConfirmationSent] = useState(false);
   const [accountType, setAccountType] = useState<AccountType>("individual");
   const [form, setForm] = useState({ fullName: "", email: "", password: "", organizationName: "" });
 
@@ -25,20 +26,23 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
     const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { data: { full_name: form.fullName } },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${ROUTES.onboarding}`,
+        data: {
+          full_name: form.fullName,
+          account_type: accountType,
+          organization_name: accountType === "enterprise" ? form.organizationName : null,
+        },
+      },
     });
     if (signUpError) { setError(signUpError.message); setLoading(false); return; }
-    await new Promise((r) => setTimeout(r, 600));
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("profiles").update({
-        account_type: accountType,
-        organization_name: accountType === "enterprise" ? form.organizationName : null,
-      }).eq("id", user.id);
+    if (!data.session) {
+      setConfirmationSent(true);
+      setLoading(false);
+      return;
     }
     router.push(ROUTES.onboarding);
   };
@@ -51,7 +55,13 @@ export default function SignupPage() {
       subtitle="Start your certification journey today"
       footer={<>Already have an account?{" "}<Link href={ROUTES.login} className="font-semibold text-brand-700 hover:underline">Log in</Link></>}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {confirmationSent ? (
+        <div className="text-center space-y-4">
+          <p className="text-sm text-foreground">We sent a confirmation link to <strong>{form.email}</strong>.</p>
+          <p className="text-xs text-muted">Open the link in that email to verify your account and continue onboarding.</p>
+          <Link href={ROUTES.login} className="inline-flex text-sm font-semibold text-brand-700 hover:underline">Return to login</Link>
+        </div>
+      ) : <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {error && <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">{error}</div>}
 
         <div>
@@ -116,7 +126,7 @@ export default function SignupPage() {
           <Link href="#" className="underline hover:text-foreground">Terms of Service</Link>{" "}and{" "}
           <Link href="#" className="underline hover:text-foreground">Privacy Policy</Link>.
         </p>
-      </form>
+      </form>}
     </AuthCard>
   );
 }

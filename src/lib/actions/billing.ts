@@ -2,6 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
 import { ROUTES } from "@/lib/constants";
@@ -24,7 +25,7 @@ async function getOrCreateStripeCustomer(supabase: any, user: { id: string; emai
     metadata: { supabase_user_id: user.id },
   });
 
-  await supabase.from("user_profiles")
+  await adminClient().from("user_profiles")
     .update({ stripe_customer_id: customer.id })
     .eq("id", user.id);
 
@@ -37,7 +38,7 @@ export async function selectStarterPlan() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  await (supabase as any).from("user_profiles").update({
+  await adminClient().from("user_profiles").update({
     subscription_tier: "starter",
     plan_selected_at: new Date().toISOString(),
   }).eq("id", user.id);

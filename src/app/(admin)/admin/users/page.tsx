@@ -10,15 +10,21 @@ const ROLE_COLORS: Record<string, string> = {
   super_admin:     "bg-red-100 text-red-700",
 };
 
-const ROLES = ["user", "org_admin", "support_agent", "content_manager", "admin", "super_admin"];
+const ROLES = ["user", "admin"];
 
 export default async function AdminUsersPage() {
   const db = adminClient();
-  const { data: users } = await db
-    .from("profiles")
-    .select("id, email, full_name, role, account_type, created_at, last_sign_in_at")
+  const { data: profiles } = await db
+    .from("user_profiles")
+    .select("id, full_name, role, account_type, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
+  const { data: authUsers } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const authById = new Map(authUsers.users.map((user: { id: string; email?: string; last_sign_in_at?: string }) => [user.id, user]));
+  const users = (profiles ?? []).map((profile: Record<string, unknown>) => ({
+    ...profile,
+    ...(authById.get(profile.id as string) ?? {}),
+  }));
 
   return (
     <div className="p-8 max-w-6xl mx-auto">

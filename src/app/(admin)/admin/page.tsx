@@ -1,47 +1,35 @@
 import { adminClient } from "@/lib/supabase/admin";
-import { Users, BookOpen, DollarSign, MessageSquare } from "lucide-react";
-
-function fmt(cents: number) {
-  return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 0 })}`;
-}
+import { Users, BookOpen, CircleCheckBig, Library } from "lucide-react";
 
 export default async function AdminOverviewPage() {
   const db  = adminClient();
   const now = new Date();
-  const day7ago   = new Date(now.getTime() - 7  * 86400000).toISOString();
   const day30ago  = new Date(now.getTime() - 30 * 86400000).toISOString();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
   const [
-    totalUsers, activeUsers, newUsers,
+    totalUsers, newUsers,
     totalSessions, completedSessions,
-    revenueAll, revenueMonth,
-    openTickets,
     totalQuestions,
     recentUsers,
   ] = await Promise.all([
-    db.from("profiles").select("id", { count: "exact", head: true }),
-    db.from("profiles").select("id", { count: "exact", head: true }).gte("last_sign_in_at", day7ago),
-    db.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", day30ago),
+    db.from("user_profiles").select("id", { count: "exact", head: true }),
+    db.from("user_profiles").select("id", { count: "exact", head: true }).gte("created_at", day30ago),
     db.from("exam_sessions").select("id", { count: "exact", head: true }),
-    db.from("exam_sessions").select("id", { count: "exact", head: true }).eq("status", "submitted"),
-    db.from("purchases").select("amount_cents").eq("status", "completed"),
-    db.from("purchases").select("amount_cents").eq("status", "completed").gte("created_at", monthStart),
-    db.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["open", "in_progress"]),
-    db.from("questions").select("id", { count: "exact", head: true }).eq("active", true),
-    db.from("profiles").select("id, email, full_name, role, created_at").order("created_at", { ascending: false }).limit(8),
+    db.from("exam_sessions").select("id", { count: "exact", head: true }).eq("status", "completed"),
+    db.from("questions").select("id", { count: "exact", head: true }),
+    db.from("user_profiles").select("id, full_name, role, created_at").order("created_at", { ascending: false }).limit(8),
   ]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const totalRevenue = (revenueAll.data ?? []).reduce((s: number, r: any) => s + (r.amount_cents ?? 0), 0);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const monthRevenue = (revenueMonth.data ?? []).reduce((s: number, r: any) => s + (r.amount_cents ?? 0), 0);
+  const { data: authUsers } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const emailById = new Map<string, string>(
+    authUsers.users.map((user: { id: string; email?: string }) => [user.id, user.email ?? "No email"] as const)
+  );
 
   const stats = [
     {
       label: "Total Users",
       value: (totalUsers.count ?? 0).toLocaleString(),
-      sub: `${activeUsers.count ?? 0} active this week · ${newUsers.count ?? 0} new this month`,
+      sub: `${newUsers.count ?? 0} new this month`,
       icon: Users,
       color: "text-brand-700 bg-brand-50",
     },
@@ -53,17 +41,17 @@ export default async function AdminOverviewPage() {
       color: "text-emerald-600 bg-emerald-50",
     },
     {
-      label: "Revenue",
-      value: fmt(totalRevenue),
-      sub: `${fmt(monthRevenue)} this month`,
-      icon: DollarSign,
+      label: "Completed Exams",
+      value: (completedSessions.count ?? 0).toLocaleString(),
+      sub: `${totalSessions.count ?? 0} total sessions`,
+      icon: CircleCheckBig,
       color: "text-amber-600 bg-amber-50",
     },
     {
-      label: "Open Tickets",
-      value: (openTickets.count ?? 0).toLocaleString(),
-      sub: `${totalQuestions.count ?? 0} active questions in bank`,
-      icon: MessageSquare,
+      label: "Question Bank",
+      value: (totalQuestions.count ?? 0).toLocaleString(),
+      sub: "Questions available",
+      icon: Library,
       color: "text-red-500 bg-red-50",
     },
   ];
@@ -118,7 +106,7 @@ export default async function AdminOverviewPage() {
               <tr key={u.id} className="border-b border-border/50 last:border-0">
                 <td className="py-2.5 pr-4">
                   <p className="font-medium text-foreground">{u.full_name ?? "—"}</p>
-                  <p className="text-xs text-muted">{u.email}</p>
+                  <p className="text-xs text-muted">{emailById.get(u.id) ?? "No email"}</p>
                 </td>
                 <td className="py-2.5 pr-4">
                   <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${ROLE_COLORS[u.role] ?? "bg-gray-100 text-gray-600"}`}>

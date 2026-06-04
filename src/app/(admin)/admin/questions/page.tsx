@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
-import { toggleQuestionActive } from "@/lib/actions/admin";
 import { Plus } from "lucide-react";
 
 const DIFF_COLORS: Record<string, string> = {
@@ -13,7 +12,7 @@ export default async function AdminQuestionsPage() {
   const db = adminClient();
   const { data: questions } = await db
     .from("questions")
-    .select("id, certification_id, domain, section, difficulty, question_text, active, created_at, certifications(code)")
+    .select("id, certification_id, category, subcategory, difficulty, body, created_at, certifications(code)")
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -38,10 +37,8 @@ export default async function AdminQuestionsPage() {
             <tr className="text-left text-xs text-muted">
               <th className="px-5 py-3 font-medium">Question</th>
               <th className="px-5 py-3 font-medium">Cert</th>
-              <th className="px-5 py-3 font-medium">Domain</th>
+              <th className="px-5 py-3 font-medium">Category</th>
               <th className="px-5 py-3 font-medium">Difficulty</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Toggle</th>
             </tr>
           </thead>
           <tbody>
@@ -49,45 +46,23 @@ export default async function AdminQuestionsPage() {
             {(questions ?? []).map((q: any) => (
               <tr key={q.id} className="border-b border-border/50 last:border-0 hover:bg-gray-50/50">
                 <td className="px-5 py-3 max-w-xs">
-                  <p className="text-foreground truncate">{q.question_text}</p>
-                  <p className="text-[11px] text-muted mt-0.5">{q.section ?? "—"}</p>
+                  <p className="text-foreground truncate">{q.body}</p>
+                  <p className="text-[11px] text-muted mt-0.5">{q.subcategory ?? "—"}</p>
                 </td>
                 <td className="px-5 py-3 text-xs font-medium text-foreground">
                   {(q.certifications as { code: string } | null)?.code ?? "—"}
                 </td>
-                <td className="px-5 py-3 text-xs text-muted">{q.domain}</td>
+                <td className="px-5 py-3 text-xs text-muted">{q.category}</td>
                 <td className="px-5 py-3">
                   <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${DIFF_COLORS[q.difficulty] ?? ""}`}>
                     {q.difficulty}
                   </span>
                 </td>
-                <td className="px-5 py-3">
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${q.active ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
-                    {q.active ? "Active" : "Inactive"}
-                  </span>
-                </td>
-                <td className="px-5 py-3">
-                  <form action={async () => {
-                    "use server";
-                    await toggleQuestionActive(q.id, !q.active);
-                  }}>
-                    <button
-                      type="submit"
-                      className={`text-xs px-3 py-1 rounded-lg font-medium transition-colors ${
-                        q.active
-                          ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                          : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                      }`}
-                    >
-                      {q.active ? "Deactivate" : "Activate"}
-                    </button>
-                  </form>
-                </td>
               </tr>
             ))}
             {(questions ?? []).length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted">
+                <td colSpan={4} className="px-5 py-10 text-center text-sm text-muted">
                   No questions yet. <Link href="/admin/questions/new" className="text-brand-700 font-medium underline">Add the first one.</Link>
                 </td>
               </tr>

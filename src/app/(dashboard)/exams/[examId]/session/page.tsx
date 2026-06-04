@@ -29,6 +29,7 @@ export default function ExamSessionPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<(string | null)[]>([]);
   const [confidences, setConfidences] = useState<Confidence[]>([]);
@@ -107,6 +108,7 @@ export default function ExamSessionPage() {
   const handleSubmit = async () => {
     accumulateTime(current);
     setSubmitting(true);
+    setSubmitError("");
     const totalTime = Math.round((Date.now() - startTime.current) / 1000);
 
     const payload = questions.map((q, i) => ({
@@ -125,10 +127,18 @@ export default function ExamSessionPage() {
       });
       sessionStorage.removeItem(`session_${examId}`);
       router.push(ROUTES.results(examId));
-    } catch {
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "We could not submit this exam. Please try again.");
       setSubmitting(false);
     }
   };
+  useEffect(() => {
+    if (loading || submitting || questions.length === 0 || timeLeft !== 0) return;
+    const timeout = window.setTimeout(() => void handleSubmit(), 0);
+    return () => window.clearTimeout(timeout);
+    // The zero transition is the only event that should trigger automatic submission.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft]);
 
   if (loading) {
     return (
@@ -266,6 +276,9 @@ export default function ExamSessionPage() {
               </button>
             )}
           </div>
+          {submitError && (
+            <p role="alert" className="text-sm text-red-600 text-center">{submitError}</p>
+          )}
         </div>
 
         {/* Question map */}
