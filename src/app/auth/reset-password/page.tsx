@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle, Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 import AuthCard from "@/components/shared/AuthCard";
 import { createClient } from "@/lib/supabase/client";
 import { ROUTES } from "@/lib/constants";
@@ -17,16 +18,37 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Session already established by /auth/callback code exchange
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true);
-    });
-    // Also handle hash-based tokens (fallback for older email links)
+    let active = true;
+
+    const verifyLink = async () => {
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          if (active) setError("This reset link is invalid or has expired. Request a new link.");
+          return;
+        }
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!active) return;
+      if (session) {
+        setReady(true);
+      } else {
+        setError("This reset link is invalid or has expired. Request a new link.");
+      }
+    };
+
+    void verifyLink();
+
     const unsub = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
-    return () => unsub.data.subscription.unsubscribe();
+    return () => {
+      active = false;
+      unsub.data.subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,10 +79,19 @@ export default function ResetPasswordPage() {
 
   if (!ready) {
     return (
-      <AuthCard title="Reset your password" subtitle="Verifying your link…">
-        <div className="flex justify-center py-6">
-          <Loader2 size={24} className="animate-spin text-brand-700" />
-        </div>
+      <AuthCard title="Reset your password" subtitle={error ? "We could not verify this link" : "Verifying your link…"}>
+        {error ? (
+          <div className="flex flex-col items-center gap-4 py-3 text-center">
+            <p className="text-sm text-red-600">{error}</p>
+            <Link href={ROUTES.forgotPassword} className="px-4 py-2.5 rounded-lg bg-brand-700 text-white text-sm font-semibold">
+              Request new link
+            </Link>
+          </div>
+        ) : (
+          <div className="flex justify-center py-6">
+            <Loader2 size={24} className="animate-spin text-brand-700" />
+          </div>
+        )}
       </AuthCard>
     );
   }
