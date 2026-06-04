@@ -15,8 +15,7 @@ echo "▶ Syncing files to VPS..."
 rsync -az --delete -e "ssh -i $SSH_KEY" \
   --exclude='.next' \
   --exclude='node_modules' \
-  --exclude='.env.local' \
-  --exclude='.env' \
+  --exclude='.env*' \
   --exclude='tsconfig.tsbuildinfo' \
   --exclude='.DS_Store' \
   --exclude='_brand' \
