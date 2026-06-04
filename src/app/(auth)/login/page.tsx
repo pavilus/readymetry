@@ -40,14 +40,14 @@ function LoginForm() {
     <AuthCard
       title={isAdmin ? "Admin Dashboard" : "Welcome back"}
       subtitle={isAdmin ? "Sign in with your admin credentials" : "Sign in to your Readymetry account"}
-      footer={
+      footer={!isAdmin ? (
         <>
           Don&apos;t have an account?{" "}
           <Link href={ROUTES.signup} className="font-semibold text-brand-700 hover:underline">
             Sign up free
           </Link>
         </>
-      }
+      ) : undefined}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {isAdmin && (
