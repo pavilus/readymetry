@@ -64,7 +64,7 @@ export default function CheckoutModal({ product, onClose, onConfirm }: CheckoutM
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-bold text-foreground">Single Exam</p>
+                      <p className="text-sm font-bold text-foreground">Single Exam Credit</p>
                       <p className="text-sm font-extrabold text-foreground">$39</p>
                     </div>
                     <p className="text-xs text-muted mt-0.5">1 premium mock exam · one-time</p>
@@ -111,12 +111,12 @@ export default function CheckoutModal({ product, onClose, onConfirm }: CheckoutM
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-foreground">
-                  {selected === "single_exam" ? "Single Exam" : "Readiness Pack"}
+                  {selected === "single_exam" ? "Single Exam Credit" : "Readiness Pack"}
                 </p>
                 <p className="text-xs text-muted mt-0.5">
                   {selected === "single_exam"
                     ? "1 premium mock exam, full explanations"
-                    : "5 full exams + complete analytics suite"}
+                    : "5 full exams + permanent readiness analytics"}
                 </p>
               </div>
               <p className="text-lg font-extrabold text-foreground">

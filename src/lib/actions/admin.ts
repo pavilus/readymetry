@@ -32,6 +32,9 @@ export async function updateUserRole(userId: string, role: string) {
 export async function createQuestion(formData: FormData) {
   const actor = await requireAdmin();
   const db = adminClient();
+  const examPart = String(formData.get("exam_part") ?? "");
+  const sourceEdition = String(formData.get("source_edition") ?? "").trim();
+  if (examPart === "C" && !sourceEdition) throw new Error("Part C questions require a source edition");
 
   const choices = ["A", "B", "C", "D"].map((id) => ({
     key: id,
@@ -48,11 +51,45 @@ export async function createQuestion(formData: FormData) {
     correct_answer:   formData.get("correct_answer") as string,
     explanation:      formData.get("explanation") as string,
     reference:        (formData.get("reference") as string) || null,
+    exam_part:        examPart,
+    source_kind:      formData.get("source_kind") as string,
+    source_edition:   sourceEdition || null,
+    source_url:       (formData.get("source_url") as string) || null,
+    question_pool:    formData.get("question_pool") as string,
+    review_status:    "needs_review",
   }).select("id").single();
   if (error) throw new Error(error.message);
   await db.from("audit_logs").insert({ actor_id: actor.id, action: "question.created", entity_type: "question", entity_id: question.id });
 
   redirect("/admin/questions");
+}
+
+export async function updateQuestionReviewStatus(formData: FormData) {
+  const actor = await requireAdmin();
+  const questionId = String(formData.get("question_id") ?? "");
+  const reviewStatus = String(formData.get("review_status") ?? "");
+  if (!["needs_review", "published", "retired"].includes(reviewStatus)) throw new Error("Invalid review status");
+
+  const db = adminClient();
+  if (reviewStatus === "published") {
+    const { data: question, error: questionError } = await db
+      .from("questions")
+      .select("exam_part, source_edition, explanation, reference, source_url")
+      .eq("id", questionId)
+      .single();
+    if (questionError) throw new Error(questionError.message);
+    if (question.exam_part === "C" && !question.source_edition) throw new Error("Part C questions require a source edition");
+    if (!question.explanation || !question.reference) throw new Error("Published questions require an explanation and reference");
+  }
+  const { error } = await db.from("questions").update({ review_status: reviewStatus }).eq("id", questionId);
+  if (error) throw new Error(error.message);
+  await db.from("audit_logs").insert({
+    actor_id: actor.id,
+    action: "question.review_status_updated",
+    entity_type: "question",
+    entity_id: questionId,
+    details: { review_status: reviewStatus },
+  });
 }
 
 export async function updateSupportTicket(formData: FormData) {

@@ -19,7 +19,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const name = profile?.full_name || user.email || "Readymetry User";
   const subtitle = certification?.code
     ? `${certification.code} Candidate`
-    : `${profile?.subscription_tier ?? "starter"} plan`;
+    : profile?.subscription_tier === "ready"
+      ? "Readiness analytics"
+      : profile?.subscription_tier === "workforce"
+        ? "Workforce access"
+        : "Free Trial access";
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F5F5FA]">

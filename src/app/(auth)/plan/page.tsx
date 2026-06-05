@@ -56,10 +56,10 @@ export default function PlanPage() {
         transition={{ duration: 0.4 }}
         className="text-center mb-10"
       >
-        <p className="text-xs font-semibold text-brand-700 uppercase tracking-wider mb-2">Step 3 of 3</p>
-        <h1 className="text-3xl font-extrabold text-foreground mb-3">Choose your plan</h1>
+        <p className="text-xs font-semibold text-brand-700 uppercase tracking-wider mb-2">Access options</p>
+        <h1 className="text-3xl font-extrabold text-foreground mb-3">Choose your next exam</h1>
         <p className="text-sm text-muted max-w-md mx-auto">
-          Start free or unlock premium preparation. One-time payment — no subscription.
+          Your Free Trial is active. Add a paid exam or unlock full readiness tracking. One-time payment, no subscription.
         </p>
       </motion.div>
 

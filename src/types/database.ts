@@ -113,6 +113,12 @@ export interface Database {
           explanation: string | null;
           difficulty: "easy" | "medium" | "hard";
           reference: string | null;
+          exam_part: "A" | "B" | "C";
+          review_status: "draft" | "needs_review" | "published" | "retired";
+          source_kind: "official_outline" | "general_reference" | "licensed_standard" | "third_party_reference";
+          source_edition: string | null;
+          source_url: string | null;
+          question_pool: "cwi_core" | "d1_1_2020";
           created_at: string;
         };
         Insert: {
@@ -126,6 +132,12 @@ export interface Database {
           explanation?: string | null;
           difficulty?: "easy" | "medium" | "hard";
           reference?: string | null;
+          exam_part?: "A" | "B" | "C";
+          review_status?: "draft" | "needs_review" | "published" | "retired";
+          source_kind?: "official_outline" | "general_reference" | "licensed_standard" | "third_party_reference";
+          source_edition?: string | null;
+          source_url?: string | null;
+          question_pool?: "cwi_core" | "d1_1_2020";
         };
         Update: Partial<{
           category: string;
@@ -136,6 +148,12 @@ export interface Database {
           explanation: string | null;
           difficulty: "easy" | "medium" | "hard";
           reference: string | null;
+          exam_part: "A" | "B" | "C";
+          review_status: "draft" | "needs_review" | "published" | "retired";
+          source_kind: "official_outline" | "general_reference" | "licensed_standard" | "third_party_reference";
+          source_edition: string | null;
+          source_url: string | null;
+          question_pool: "cwi_core" | "d1_1_2020";
         }>;
       };
       exam_sessions: {
@@ -154,6 +172,7 @@ export interface Database {
           progress: Json | null;
           remaining_seconds: number | null;
           expires_at: string | null;
+          access_type: "free" | "credit" | "workforce";
           started_at: string;
           completed_at: string | null;
         };
@@ -172,6 +191,7 @@ export interface Database {
           progress?: Json | null;
           remaining_seconds?: number | null;
           expires_at?: string | null;
+          access_type?: "free" | "credit" | "workforce";
           completed_at?: string | null;
         };
         Update: Partial<{
@@ -184,6 +204,7 @@ export interface Database {
           progress: Json | null;
           remaining_seconds: number | null;
           expires_at: string | null;
+          access_type: "free" | "credit" | "workforce";
         }>;
       };
       user_answers: {

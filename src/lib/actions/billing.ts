@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
-import { ROUTES } from "@/lib/constants";
 
 export type PurchaseType = "single_exam" | "readiness_pack";
 
@@ -32,7 +31,7 @@ async function getOrCreateStripeCustomer(supabase: any, user: { id: string; emai
   return customer.id;
 }
 
-/** Free tier — mark plan as selected, no Stripe needed */
+/** Activate the Free Trial starting state, no Stripe needed. */
 export async function selectStarterPlan() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -108,19 +107,4 @@ export async function getBillingStatus() {
     canStartExam: tier === "workforce" || !data.free_exam_consumed || examCredits > 0,
     hasFullAnalytics: tier === "ready" || tier === "workforce",
   };
-}
-
-/** Called from dashboard server component — redirects to /plan if no plan yet */
-export async function requirePlan() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect(ROUTES.login);
-
-  const { data } = await (supabase as any)
-    .from("user_profiles")
-    .select("plan_selected_at")
-    .eq("id", user.id)
-    .single();
-
-  if (!data?.plan_selected_at) redirect(ROUTES.plan);
 }

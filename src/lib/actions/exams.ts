@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { selectBalancedQuestions } from "@/lib/exam-selection";
 
 export interface StartSessionOptions {
   certificationId: string;
@@ -20,7 +21,7 @@ export async function getExamCatalog() {
   const admin = adminClient();
   const [{ data: certifications, error: certError }, { data: questions, error: questionError }] = await Promise.all([
     admin.from("certifications").select("id, code, name, body, available, question_count").order("code"),
-    admin.from("questions").select("certification_id, category"),
+    admin.from("questions").select("certification_id, category").eq("review_status", "published"),
   ]);
   if (certError) throw new Error(certError.message);
   if (questionError) throw new Error(questionError.message);
@@ -58,10 +59,26 @@ export async function startExamSession(opts: StartSessionOptions) {
   if (!user) throw new Error("Not authenticated");
 
   const admin = adminClient();
+  const { data: profile } = await admin
+    .from("user_profiles")
+    .select("subscription_tier, free_exam_consumed, purchased_exam_credits")
+    .eq("id", user.id)
+    .single();
+
+  if (
+    opts.examType === "timed_simulation"
+    && profile?.subscription_tier === "starter"
+    && !profile.free_exam_consumed
+    && (profile.purchased_exam_credits ?? 0) === 0
+  ) {
+    throw new Error("Timed simulation is available with a paid exam credit or Readiness Pack");
+  }
+
   let query = admin
     .from("questions")
     .select("id, certification_id, category, subcategory, body, options, difficulty, reference")
-    .eq("certification_id", opts.certificationId);
+    .eq("certification_id", opts.certificationId)
+    .eq("review_status", "published");
 
   if (opts.categories.length > 0) {
     query = query.in("category", opts.categories);
@@ -75,8 +92,18 @@ export async function startExamSession(opts: StartSessionOptions) {
   if (qErr) throw new Error(qErr.message);
   if (!questions || questions.length === 0) throw new Error("No questions found for these filters");
 
-  // Shuffle and pick requested count
-  const shuffled = questions.sort(() => Math.random() - 0.5).slice(0, opts.questionCount);
+  const { data: recentSessions } = await admin
+    .from("exam_sessions")
+    .select("question_ids")
+    .eq("user_id", user.id)
+    .eq("certification_id", opts.certificationId)
+    .eq("status", "completed")
+    .order("completed_at", { ascending: false })
+    .limit(5);
+  const recentlySeenIds = new Set<string>(
+    (recentSessions ?? []).flatMap((session: { question_ids: string[] | null }) => session.question_ids ?? []),
+  );
+  const shuffled = selectBalancedQuestions(questions, opts.questionCount, recentlySeenIds);
 
   const { data: accessType, error: accessErr } = await admin.rpc("consume_exam_access", {
     p_user_id: user.id,
@@ -97,6 +124,7 @@ export async function startExamSession(opts: StartSessionOptions) {
       expires_at: opts.examType === "timed_simulation"
         ? new Date(Date.now() + shuffled.length * 90 * 1000).toISOString()
         : null,
+      access_type: accessType,
     })
     .select()
     .single();
@@ -308,7 +336,26 @@ export async function getSessionResults(sessionId: string) {
 
   if (error || !session) return null;
 
-  const { data: answers } = await adminClient()
+  const admin = adminClient();
+  const { data: profile } = await admin
+    .from("user_profiles")
+    .select("subscription_tier")
+    .eq("id", user.id)
+    .single();
+  const hasFullAnalytics = profile?.subscription_tier === "ready" || profile?.subscription_tier === "workforce";
+  const sessionAccess = (session as unknown as { access_type: "free" | "credit" | "workforce" }).access_type;
+  const hasDetailedResults = hasFullAnalytics || sessionAccess === "credit" || sessionAccess === "workforce";
+
+  if (!hasDetailedResults) {
+    return {
+      session,
+      answers: [],
+      categoryBreakdown: [],
+      entitlements: { hasDetailedResults: false, hasFullAnalytics: false },
+    };
+  }
+
+  const { data: answers } = await admin
     .from("user_answers")
     .select("*, questions(category, body, correct_answer, explanation, options)")
     .eq("session_id", sessionId);
@@ -330,7 +377,12 @@ export async function getSessionResults(sessionId: string) {
     accuracy: Math.round((correct / total) * 100),
   })).sort((a, b) => a.accuracy - b.accuracy);
 
-  return { session, answers: answers ?? [], categoryBreakdown };
+  return {
+    session,
+    answers: answers ?? [],
+    categoryBreakdown,
+    entitlements: { hasDetailedResults, hasFullAnalytics },
+  };
 }
 
 export async function getRecentSessions(limit = 5) {

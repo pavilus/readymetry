@@ -111,9 +111,9 @@ function DashboardPreview() {
 }
 
 const STATS = [
-  { value: "50,000+", label: "Professionals" },
-  { value: "95%", label: "Pass Rate" },
-  { value: "Built for", label: "professionals worldwide" },
+  { value: "1 free", label: "practice exam" },
+  { value: "No", label: "subscription required" },
+  { value: "AWS CWI", label: "available now" },
 ];
 
 export default function Hero() {
@@ -157,23 +157,7 @@ export default function Hero() {
               </Link>
             </div>
 
-            {/* Social proof */}
-            <div className="flex flex-col sm:flex-row items-center lg:items-start gap-6">
-              <div className="flex -space-x-2">
-                {["#a78bfa","#7c3aed","#6d28d9","#5b21b6"].map((color, i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-white text-[10px] font-bold"
-                    style={{ backgroundColor: color }}
-                  >
-                    {["JD","MR","SA","KL"][i]}
-                  </div>
-                ))}
-              </div>
-              <div className="text-sm text-muted text-center lg:text-left">
-                <span className="font-semibold text-foreground">50,000+</span> professionals trust Readymetry
-              </div>
-            </div>
+            <p className="text-sm text-muted">AWS CWI practice is available now. Additional certification tracks are coming soon.</p>
           </div>
 
           {/* Right — dashboard preview */}

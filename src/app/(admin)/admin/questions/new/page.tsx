@@ -62,6 +62,30 @@ export default async function NewQuestionPage() {
                 className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1">Exam part</label>
+              <select name="exam_part" required className="w-full border border-border rounded-xl px-3 py-2 text-sm bg-white">
+                <option value="A">Part A — Fundamentals</option>
+                <option value="B">Part B — Practical</option>
+                <option value="C">Part C — Code Book</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1">Source type</label>
+              <select name="source_kind" required className="w-full border border-border rounded-xl px-3 py-2 text-sm bg-white">
+                <option value="general_reference">General reference</option>
+                <option value="official_outline">Official outline</option>
+                <option value="licensed_standard">Licensed standard</option>
+                <option value="third_party_reference">Third-party reference</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1">Question pool</label>
+              <select name="question_pool" required className="w-full border border-border rounded-xl px-3 py-2 text-sm bg-white">
+                <option value="cwi_core">CWI core</option>
+                <option value="d1_1_2020">D1.1:2020 current Part C</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -81,6 +105,11 @@ export default async function NewQuestionPage() {
           <h2 className="text-sm font-semibold text-foreground">Reference</h2>
           <input name="reference" type="text" placeholder="e.g. AWS D1.1 Clause 6.9"
             className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          <input name="source_edition" type="text" placeholder="Source edition (required for Part C)"
+            className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          <input name="source_url" type="url" placeholder="Source URL (optional)"
+            className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          <p className="text-xs text-muted">New questions are saved for review and are not used in exams until published.</p>
         </div>
 
         {/* Answer choices */}

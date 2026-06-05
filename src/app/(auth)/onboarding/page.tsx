@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { saveOnboarding } from "@/lib/actions/onboarding";
+import { createCheckoutSession, selectStarterPlan } from "@/lib/actions/billing";
 import { createClient } from "@/lib/supabase/client";
 
 interface Track {
@@ -41,7 +42,13 @@ export default function OnboardingPage() {
     setError("");
     try {
       await saveOnboarding(selected, examDate || null);
-      router.push(ROUTES.plan);
+      await selectStarterPlan();
+      const intent = new URLSearchParams(window.location.search).get("intent");
+      if (intent === "single_exam" || intent === "readiness_pack") {
+        await createCheckoutSession(intent);
+        return;
+      }
+      router.push(ROUTES.dashboard);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setLoading(false);
@@ -143,7 +150,7 @@ export default function OnboardingPage() {
                 disabled={loading}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-700 text-white text-sm font-semibold hover:bg-brand-800 transition-colors disabled:opacity-60"
               >
-                {loading ? <Loader2 size={15} className="animate-spin" /> : <>Go to Dashboard <ArrowRight size={15} /></>}
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <>Start Free Trial <ArrowRight size={15} /></>}
               </button>
             </div>
           </div>

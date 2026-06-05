@@ -2,7 +2,7 @@ import Link from "next/link";
 import { TrendingUp, BookOpen, Target, Clock, ChevronRight, AlertCircle } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { getDashboardData } from "@/lib/actions/dashboard";
-import { requirePlan } from "@/lib/actions/billing";
+import { getBillingStatus } from "@/lib/actions/billing";
 import { redirect } from "next/navigation";
 
 function ReadinessRing({ score }: { score: number }) {
@@ -32,8 +32,7 @@ function getReadinessLabel(score: number) {
 }
 
 export default async function DashboardPage() {
-  await requirePlan(); // redirects to /plan if no plan selected yet
-  const data = await getDashboardData();
+  const [data, billing] = await Promise.all([getDashboardData(), getBillingStatus()]);
   if (!data) redirect(ROUTES.login);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,8 +84,10 @@ export default async function DashboardPage() {
         {[
           { label: "Tests Taken", value: stats?.totalSessions.toString() ?? "0", sub: "All time", icon: BookOpen, color: "text-brand-700 bg-brand-50" },
           { label: "Avg Score", value: `${stats?.avgScore ?? 0}%`, sub: "All sessions", icon: TrendingUp, color: "text-emerald-600 bg-emerald-50" },
-          { label: "Pass Probability", value: `${stats?.passProb ?? 0}%`, sub: "Based on recent tests", icon: Target, color: "text-brand-700 bg-brand-50" },
-          { label: "Study Time", value: `${stats?.studyHours ?? 0}h`, sub: "Total", icon: Clock, color: "text-amber-600 bg-amber-50" },
+          billing?.hasFullAnalytics
+            ? { label: "Pass Probability", value: `${stats?.passProb ?? 0}%`, sub: "Based on recent tests", icon: Target, color: "text-brand-700 bg-brand-50" }
+            : { label: "Exam Credits", value: `${billing?.examCredits ?? 0}`, sub: billing?.canStartExam ? "Available now" : "Buy another exam", icon: Target, color: "text-brand-700 bg-brand-50" },
+          { label: "Access", value: billing?.hasFullAnalytics ? "Ready" : "Basic", sub: billing?.hasFullAnalytics ? "Analytics unlocked" : "Per-exam results", icon: Clock, color: "text-amber-600 bg-amber-50" },
         ].map((s) => {
           const Icon = s.icon;
           return (
@@ -104,6 +105,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Readiness card */}
+        {billing?.hasFullAnalytics ? (
         <div className="bg-white rounded-2xl border border-border p-6 flex flex-col items-center text-center">
           <p className="text-sm font-semibold text-foreground mb-4">Readiness Score</p>
           <ReadinessRing score={readiness} />
@@ -120,8 +122,18 @@ export default async function DashboardPage() {
             </div>
           )}
         </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-border p-6 flex flex-col justify-center text-center">
+            <p className="text-sm font-semibold text-foreground mb-2">Unlock readiness tracking</p>
+            <p className="text-xs text-muted mb-5">See pass probability, weak areas, and progress across every exam with the Readiness Pack.</p>
+            <Link href={ROUTES.pricing} className="inline-flex justify-center px-4 py-2.5 rounded-xl bg-brand-700 text-white text-xs font-semibold">
+              View Readiness Pack
+            </Link>
+          </div>
+        )}
 
         {/* Weak areas */}
+        {billing?.hasFullAnalytics ? (
         <div className="bg-white rounded-2xl border border-border p-6">
           <div className="flex items-center justify-between mb-5">
             <p className="text-sm font-semibold text-foreground">Weak Areas</p>
@@ -150,6 +162,14 @@ export default async function DashboardPage() {
             </div>
           )}
         </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-border p-6 flex items-center justify-center text-center">
+            <div>
+              <p className="text-sm font-semibold text-foreground mb-2">Weak-area analysis</p>
+              <p className="text-xs text-muted">Included with the Readiness Pack.</p>
+            </div>
+          </div>
+        )}
 
         {/* Recent sessions */}
         <div className="bg-white rounded-2xl border border-border p-6">

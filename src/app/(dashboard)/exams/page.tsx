@@ -27,10 +27,10 @@ export default function ExamsPage() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [questionCount, setQuestionCount] = useState(10);
   const [difficulty, setDifficulty] = useState("Any");
-  const [timed, setTimed] = useState(true);
+  const [timed, setTimed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [billing, setBilling] = useState<{ canStartExam: boolean; tier: string; examCredits: number } | null>(null);
+  const [billing, setBilling] = useState<{ canStartExam: boolean; tier: string; examCredits: number; hasFullAnalytics: boolean; completedSessions: number } | null>(null);
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [buyingCredits, setBuyingCredits] = useState(false);
 
@@ -54,6 +54,10 @@ export default function ExamsPage() {
     // Block Starter users who've used their free exam and have no credits
     if (billing && !billing.canStartExam) {
       setShowCreditModal(true);
+      return;
+    }
+    if (timed && billing?.tier === "starter" && billing.completedSessions === 0 && billing.examCredits === 0) {
+      setError("Timed simulation is available with a paid exam credit or Readiness Pack. Your Free Trial uses practice mode.");
       return;
     }
     setLoading(true);
@@ -255,7 +259,9 @@ export default function ExamsPage() {
             </div>
             <button
               onClick={() => setTimed((v) => !v)}
+              disabled={billing?.tier === "starter" && billing.completedSessions === 0 && billing.examCredits === 0}
               className={`w-11 h-6 rounded-full transition-colors relative ${timed ? "bg-brand-700" : "bg-border"}`}
+              title={billing?.tier === "starter" && billing.completedSessions === 0 && billing.examCredits === 0 ? "Available with a paid exam credit" : "Toggle timed mode"}
             >
               <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${timed ? "left-5" : "left-0.5"}`} />
             </button>

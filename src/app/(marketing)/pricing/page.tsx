@@ -31,7 +31,7 @@ const FAQ = [
   },
   {
     q: "What is the Workforce plan?",
-    a: "Workforce is for organizations training 15+ employees for certification. It includes team dashboards, compliance reporting, exportable analytics, and admin controls. Contact us for pricing.",
+    a: "Workforce is a sales-led offering for organizations preparing teams for certification. Contact us to discuss your program, requirements, and rollout.",
   },
   {
     q: "Do you offer refunds?",
@@ -82,7 +82,7 @@ export default function PricingPage() {
 
   const handleConfirm = async (product: PricingProductKey) => {
     if (product === "free") {
-      router.push(ROUTES.signup);
+      router.push(`${ROUTES.signup}?intent=${product}`);
       return;
     }
     setLoadingPlan(product);

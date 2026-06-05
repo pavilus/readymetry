@@ -36,3 +36,47 @@ test("security headers remain configured", () => {
     assert.match(config, new RegExp(header));
   }
 });
+
+test("exam products preserve per-session entitlements", () => {
+  const migration = fs.readFileSync("supabase/migrations/20260604000008_product_entitlements.sql", "utf8");
+  const exams = fs.readFileSync("src/lib/actions/exams.ts", "utf8");
+  assert.match(migration, /access_type IN \('free', 'credit', 'workforce'\)/);
+  assert.ok(migration.indexOf("IF v_credits > 0") < migration.indexOf("IF NOT coalesce(v_free_consumed"), "paid credits must be used before the Free Trial");
+  assert.match(exams, /entitlements: \{ hasDetailedResults: false, hasFullAnalytics: false \}/);
+  assert.match(exams, /access_type: accessType/);
+});
+
+test("question-bank growth is reviewed and balanced", () => {
+  const quality = fs.readFileSync("supabase/migrations/20260604000009_question_bank_quality.sql", "utf8");
+  const batch = fs.readFileSync("supabase/migrations/20260604000010_cwi_part_a_batch_001.sql", "utf8");
+  const exams = fs.readFileSync("src/lib/actions/exams.ts", "utf8");
+  assert.match(quality, /review_status IN \('draft', 'needs_review', 'published', 'retired'\)/);
+  assert.match(batch, /'needs_review'/);
+  assert.match(exams, /\.eq\("review_status", "published"\)/);
+  assert.match(exams, /selectBalancedQuestions\(questions, opts\.questionCount, recentlySeenIds\)/);
+});
+
+test("question sources distinguish previews from complete references", () => {
+  const sources = fs.readFileSync("docs/question-sources.md", "utf8");
+  const separation = fs.readFileSync("supabase/migrations/20260604000011_question_pool_separation.sql", "utf8");
+  assert.match(sources, /Welding Handbook, Ninth Edition, Volume 4/);
+  assert.match(sources, /front matter and contents only/);
+  assert.match(separation, /source_url TEXT/);
+});
+
+test("third-party reference questions remain review-only by default", () => {
+  const batch = fs.readFileSync("supabase/migrations/20260604000013_cwi_processes_batch_002.sql", "utf8");
+  const fundamentals = fs.readFileSync("supabase/migrations/20260604000014_cwi_fundamentals_batch_003.sql", "utf8");
+  const inspection = fs.readFileSync("supabase/migrations/20260604000015_cwi_inspection_testing_batch_004.sql", "utf8");
+  const sources = fs.readFileSync("docs/question-sources.md", "utf8");
+  assert.match(batch, /'needs_review', 'third_party_reference'/);
+  assert.match(fundamentals, /'needs_review', 'third_party_reference'/);
+  assert.match(inspection, /'needs_review', 'third_party_reference'/);
+  assert.match(sources, /redistribution authorization is unclear/);
+});
+
+test("question bank contains only current pools", () => {
+  const separation = fs.readFileSync("supabase/migrations/20260604000011_question_pool_separation.sql", "utf8");
+  assert.match(separation, /question_pool IN \('cwi_core', 'd1_1_2020'\)/);
+  assert.equal(fs.existsSync("supabase/migrations/20260604000012_d1_1_2000_historical_batch_001.sql"), false);
+});

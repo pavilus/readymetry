@@ -25,7 +25,7 @@ const TABLE_DATA: Section[] = [
       { feature: "Mock exam attempts", free: "1 free", single: "1 premium", pack: "5 full exams", workforce: "Unlimited" },
       { feature: "Timed simulation mode", free: false, single: true, pack: true, workforce: true },
       { feature: "Realistic question bank", free: true, single: true, pack: true, workforce: true },
-      { feature: "Full answer explanations", free: "Limited", single: true, pack: true, workforce: true },
+      { feature: "Full answer explanations", free: false, single: true, pack: true, workforce: "Custom rollout" },
     ],
   },
   {
@@ -41,21 +41,18 @@ const TABLE_DATA: Section[] = [
     ],
   },
   {
-    category: "Team & Enterprise",
+    category: "Organization Access",
     rows: [
-      { feature: "Organization dashboard", free: false, single: false, pack: false, workforce: true },
-      { feature: "Employee readiness tracking", free: false, single: false, pack: false, workforce: true },
-      { feature: "Compliance reports", free: false, single: false, pack: false, workforce: true },
-      { feature: "Exportable analytics", free: false, single: false, pack: false, workforce: true },
-      { feature: "Admin controls", free: false, single: false, pack: false, workforce: true },
-      { feature: "Dedicated support", free: false, single: false, pack: false, workforce: true },
+      { feature: "Sales-led team rollout", free: false, single: false, pack: false, workforce: "Contact sales" },
+      { feature: "Program requirements review", free: false, single: false, pack: false, workforce: true },
+      { feature: "Dedicated onboarding support", free: false, single: false, pack: false, workforce: true },
     ],
   },
 ];
 
 const COLUMNS = [
-  { key: "free", label: "Free", sub: "$0" },
-  { key: "single", label: "Single Exam", sub: "$39" },
+  { key: "free", label: "Free Trial", sub: "$0" },
+  { key: "single", label: "Exam Credit", sub: "$39" },
   { key: "pack", label: "Readiness Pack", sub: "$99", highlight: true },
   { key: "workforce", label: "Workforce", sub: "Custom" },
 ];

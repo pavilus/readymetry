@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, ArrowRight, Loader2, User, Building2 } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import AuthCard from "@/components/shared/AuthCard";
 import { ROUTES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
-
-type AccountType = "individual" | "enterprise";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -16,25 +14,24 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [confirmationSent, setConfirmationSent] = useState(false);
-  const [accountType, setAccountType] = useState<AccountType>("individual");
-  const [form, setForm] = useState({ fullName: "", email: "", password: "", organizationName: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
-    if (accountType === "enterprise" && !form.organizationName.trim()) { setError("Organization name is required"); return; }
     setLoading(true);
     setError("");
     const supabase = createClient();
+    const intent = new URLSearchParams(window.location.search).get("intent");
+    const next = intent ? `${ROUTES.onboarding}?intent=${intent}` : ROUTES.onboarding;
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${ROUTES.onboarding}`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
         data: {
           full_name: form.fullName,
-          account_type: accountType,
-          organization_name: accountType === "enterprise" ? form.organizationName : null,
+          account_type: "individual",
         },
       },
     });
@@ -44,7 +41,7 @@ export default function SignupPage() {
       setLoading(false);
       return;
     }
-    router.push(ROUTES.onboarding);
+    router.push(next);
   };
 
   const inputClass = "w-full px-4 py-2.5 rounded-lg border border-border bg-white text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent transition";
@@ -65,36 +62,10 @@ export default function SignupPage() {
         {error && <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">{error}</div>}
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Account type</label>
-          <div className="grid grid-cols-2 gap-2">
-            {([
-              { type: "individual" as AccountType, icon: User, label: "Individual", sub: "Personal exam prep" },
-              { type: "enterprise" as AccountType, icon: Building2, label: "Enterprise", sub: "Teams & organizations" },
-            ]).map(({ type, icon: Icon, label, sub }) => (
-              <button key={type} type="button" onClick={() => setAccountType(type)}
-                className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all ${accountType === type ? "border-brand-600 bg-brand-50" : "border-border hover:border-brand-200"}`}>
-                <div className={`flex items-center gap-2 ${accountType === type ? "text-brand-700" : "text-foreground"}`}>
-                  <Icon size={14} /><span className="text-sm font-semibold">{label}</span>
-                </div>
-                <span className="text-[11px] text-muted">{sub}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Full name</label>
           <input type="text" required autoComplete="name" value={form.fullName} placeholder="Alex Johnson"
             onChange={(e) => setForm({ ...form, fullName: e.target.value })} className={inputClass} />
         </div>
-
-        {accountType === "enterprise" && (
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Organization name</label>
-            <input type="text" required value={form.organizationName} placeholder="Industrial Inspection Inc."
-              onChange={(e) => setForm({ ...form, organizationName: e.target.value })} className={inputClass} />
-          </div>
-        )}
 
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Email address</label>

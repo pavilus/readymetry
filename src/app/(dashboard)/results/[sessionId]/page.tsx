@@ -85,8 +85,10 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
     };
     categoryBreakdown: { category: string; accuracy: number; correct: number; total: number }[];
     answers: { time_spent_seconds: number | null; is_correct: boolean; questions: { category: string } }[];
+    entitlements: { hasDetailedResults: boolean; hasFullAnalytics: boolean };
   };
-  const { session, categoryBreakdown, answers } = data as unknown as ResultsData;
+  const { session, categoryBreakdown, answers, entitlements } = data as unknown as ResultsData;
+  const hasDetailedResults = entitlements?.hasDetailedResults ?? false;
   const cert = session.certifications as { code: string; name: string; passing_score: number };
   const score = Math.round(session.score ?? 0);
   const passingScore = cert.passing_score ?? 72;
@@ -119,7 +121,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className={`grid grid-cols-1 ${hasDetailedResults ? "lg:grid-cols-3" : "max-w-md"} gap-6 mb-6`}>
         {/* Score card */}
         <div className="bg-white rounded-2xl border border-border p-8 flex flex-col items-center text-center gap-4">
           <ScoreRing score={score} passingScore={passingScore} />
@@ -134,6 +136,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
         </div>
 
         {/* Stats */}
+        {hasDetailedResults && (
         <div className="grid grid-rows-2 gap-4">
           <div className="bg-white rounded-2xl border border-border p-5">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3 text-brand-700 bg-brand-50">
@@ -153,8 +156,10 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
             <p className="text-xs text-muted mt-0.5">Avg Time / Question</p>
           </div>
         </div>
+        )}
 
         {/* Weak areas */}
+        {hasDetailedResults && (
         <div className="bg-white rounded-2xl border border-border p-6">
           <p className="text-sm font-semibold text-foreground mb-4">Areas to Improve</p>
           {weakAreas.length === 0 ? (
@@ -178,9 +183,12 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* AI Feedback Summary */}
+      {hasDetailedResults ? (
+      <>
       <div className="bg-gradient-to-br from-brand-700 to-purple-800 rounded-2xl p-6 mb-6 text-white">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles size={16} className="text-purple-200" />
@@ -254,15 +262,36 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
           </div>
         </div>
       )}
+      </>
+      ) : (
+        <div className="bg-white rounded-2xl border border-border p-6 mb-6">
+          <p className="text-sm font-semibold text-foreground mb-2">Free Trial result</p>
+          <p className="text-sm text-muted mb-5">
+            Your Free Trial includes your score and pass result. Purchase a Single Exam Credit for detailed explanations and per-exam analysis, or choose the Readiness Pack for long-term readiness tracking.
+          </p>
+          <Link href={ROUTES.pricing} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-700 text-white text-sm font-semibold">
+            Compare access options <ArrowRight size={15} />
+          </Link>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
+        {hasDetailedResults ? (
         <Link
           href={ROUTES.reviewResults(sessionId)}
           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-700 text-white text-sm font-semibold hover:bg-brand-800 transition-colors shadow-[0_4px_14px_rgba(109,40,217,0.3)]"
         >
           <BookOpen size={15} /> Review Answers
         </Link>
+        ) : (
+          <Link
+            href={ROUTES.pricing}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-700 text-white text-sm font-semibold hover:bg-brand-800 transition-colors"
+          >
+            <BookOpen size={15} /> Unlock Detailed Review
+          </Link>
+        )}
         <Link
           href={ROUTES.exams}
           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-surface transition-colors"

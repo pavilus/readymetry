@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ChevronLeft, CheckCircle2, XCircle, Bookmark, RotateCcw, AlertCircle } from "lucide-react";
+import { ChevronLeft, CheckCircle2, XCircle, Bookmark, RotateCcw, AlertCircle, Lock } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { getSessionResults } from "@/lib/actions/exams";
 
@@ -33,12 +33,14 @@ export default function ReviewPage() {
   const [filter, setFilter] = useState<FilterMode>("incorrect");
   const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [hasDetailedResults, setHasDetailedResults] = useState(true);
 
   useEffect(() => {
     getSessionResults(sessionId).then((data) => {
       if (!data) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw = data as any;
+      setHasDetailedResults(raw.entitlements?.hasDetailedResults ?? false);
       setSession(raw.session);
       setAnswers(raw.answers ?? []);
       // Start all incorrect answers expanded
@@ -92,6 +94,21 @@ export default function ReviewPage() {
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-32 bg-white rounded-2xl border border-border" />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasDetailedResults) {
+    return (
+      <div className="p-8 max-w-xl mx-auto">
+        <div className="bg-white rounded-2xl border border-border p-8 text-center">
+          <Lock size={28} className="mx-auto text-brand-700 mb-3" />
+          <h1 className="text-xl font-extrabold text-foreground mb-2">Detailed review is not included in the Free Trial</h1>
+          <p className="text-sm text-muted mb-6">A Single Exam Credit includes full answers and explanations. The Readiness Pack also adds long-term analytics.</p>
+          <Link href={ROUTES.pricing} className="inline-flex px-5 py-2.5 rounded-xl bg-brand-700 text-white text-sm font-semibold">
+            Compare access options
+          </Link>
         </div>
       </div>
     );

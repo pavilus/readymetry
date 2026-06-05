@@ -28,8 +28,9 @@ export default async function SettingsPage() {
   const planFeatures = tier === "workforce"
     ? ["Unlimited exam sessions", "Full readiness analytics", "Team access"]
     : tier === "ready"
-      ? ["Full readiness analytics", "Five exam credits per pack", "All available certification tracks"]
-      : ["One free exam session", "Purchase additional exam credits anytime"];
+      ? ["Permanent readiness analytics", "Five exam credits per pack", "All available certification tracks"]
+      : ["One Free Trial practice exam", "Purchase detailed exam credits anytime"];
+  const accessName = tier === "workforce" ? "Workforce access" : tier === "ready" ? "Readiness analytics" : "Free Trial access";
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -80,7 +81,7 @@ export default async function SettingsPage() {
         <section className="bg-white rounded-xl border border-border p-7">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-sm font-semibold text-foreground capitalize">{tier} plan</h2>
+              <h2 className="text-sm font-semibold text-foreground">{accessName}</h2>
               <p className="text-xs text-muted mt-1">{profile?.purchased_exam_credits ?? 0} paid exam credits remaining</p>
             </div>
             <a href={ROUTES.pricing} className="px-4 py-2 rounded-lg bg-brand-700 text-white text-sm font-semibold">Buy credits</a>
