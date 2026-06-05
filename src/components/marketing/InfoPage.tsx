@@ -7,7 +7,7 @@ export default function InfoPage({ title, intro, children }: { title: string; in
     <>
       <Navbar />
       <main className="flex-1 bg-white">
-        <header className="border-b border-border bg-surface px-4 py-16 sm:px-6">
+        <header className="border-b border-border bg-surface px-4 pb-16 pt-52 sm:px-6">
           <div className="mx-auto max-w-3xl">
             <h1 className="text-3xl font-extrabold text-foreground">{title}</h1>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">{intro}</p>

@@ -16,7 +16,7 @@ export default function CTABanner() {
           Start your journey to certification success
         </h2>
         <p className="text-brand-200 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-          Join thousands of professionals who trust Readymetry to help them pass with confidence.
+          Start with one free practice exam and see where your readiness stands.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
@@ -27,7 +27,7 @@ export default function CTABanner() {
             <ArrowRight size={16} />
           </Link>
           <Link
-            href="#pricing"
+            href={ROUTES.pricing}
             className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border border-brand-400 text-white font-semibold text-sm hover:bg-brand-800 transition-colors"
           >
             View Pricing

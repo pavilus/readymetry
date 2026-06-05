@@ -7,6 +7,9 @@ test("required public and operational routes exist", () => {
     "src/app/(marketing)/privacy/page.tsx",
     "src/app/(marketing)/terms/page.tsx",
     "src/app/(marketing)/cookies/page.tsx",
+    "src/app/(marketing)/refund/page.tsx",
+    "src/app/(marketing)/accessibility/page.tsx",
+    "src/app/(marketing)/exam-disclaimer/page.tsx",
     "src/app/(marketing)/contact/page.tsx",
     "src/app/api/health/route.ts",
     "src/app/(dashboard)/support/page.tsx",
@@ -15,6 +18,19 @@ test("required public and operational routes exist", () => {
     "src/app/opengraph-image.tsx",
   ];
   for (const route of routes) assert.equal(fs.existsSync(route), true, `${route} is missing`);
+});
+
+test("marketing navigation points to live routes and sections", () => {
+  const navbar = fs.readFileSync("src/components/marketing/Navbar.tsx", "utf8");
+  const footer = fs.readFileSync("src/components/marketing/Footer.tsx", "utf8");
+  const landing = fs.readFileSync("src/app/(marketing)/page.tsx", "utf8");
+  assert.doesNotMatch(navbar, /href: "#/);
+  assert.doesNotMatch(footer, /#pricing/);
+  assert.match(landing, /FeatureHighlights/);
+  assert.match(landing, /ResourcesSection/);
+  for (const route of ["refund", "accessibility", "examDisclaimer"]) {
+    assert.match(footer, new RegExp(`ROUTES\\.${route}`));
+  }
 });
 
 test("support and audit migration preserves internal-note privacy", () => {

@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 
 const NAV_LINKS = [
-  { label: "Certifications", href: "#certifications" },
-  { label: "How it Works", href: "#how-it-works" },
-  { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Resources", href: "#resources" },
+  { label: "Certifications", href: "/#certifications" },
+  { label: "How it Works", href: "/#how-it-works" },
+  { label: "Features", href: "/#features" },
+  { label: "Pricing", href: ROUTES.pricing },
+  { label: "Resources", href: "/#resources" },
 ];
 
 export default function Navbar() {

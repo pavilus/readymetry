@@ -1,21 +1,26 @@
 import Link from "next/link";
 import Image from "next/image";
+import { ROUTES } from "@/lib/constants";
 
 const LINKS = {
   Product: [
-    { label: "Features", href: "/#how-it-works" },
-    { label: "Pricing", href: "/pricing" },
+    { label: "Features", href: "/#features" },
+    { label: "Pricing", href: ROUTES.pricing },
     { label: "Certifications", href: "/#certifications" },
     { label: "How it Works", href: "/#how-it-works" },
+    { label: "Resources", href: "/#resources" },
   ],
   Company: [
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
+    { label: "About", href: ROUTES.about },
+    { label: "Contact", href: ROUTES.contact },
   ],
   Legal: [
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
-    { label: "Cookie Policy", href: "/cookies" },
+    { label: "Terms of Service", href: ROUTES.terms },
+    { label: "Privacy Policy", href: ROUTES.privacy },
+    { label: "Cookie Policy", href: ROUTES.cookies },
+    { label: "Refund Policy", href: ROUTES.refund },
+    { label: "Accessibility", href: ROUTES.accessibility },
+    { label: "Exam Disclaimer", href: ROUTES.examDisclaimer },
   ],
 };
 
