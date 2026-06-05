@@ -8,6 +8,9 @@ const VARIABLES = [
   { key: "STRIPE_WEBHOOK_SECRET", label: "Stripe webhook signing secret", group: "Stripe" },
   { key: "STRIPE_SINGLE_EXAM_PRICE_ID", label: "Single Exam price ID", group: "Stripe" },
   { key: "STRIPE_READINESS_PACK_PRICE_ID", label: "Readiness Pack price ID", group: "Stripe" },
+  { key: "STRIPE_WORKFORCE_5_PRICE_ID", label: "Workforce 5 price ID", group: "Stripe" },
+  { key: "STRIPE_WORKFORCE_10_PRICE_ID", label: "Workforce 10 price ID", group: "Stripe" },
+  { key: "STRIPE_WORKFORCE_25_PRICE_ID", label: "Workforce 25 price ID", group: "Stripe" },
   { key: "NEXT_PUBLIC_APP_URL", label: "Application URL", group: "Application" },
 ] as const;
 

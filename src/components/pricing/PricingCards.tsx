@@ -10,7 +10,9 @@ const ICONS: Record<PricingProductKey, React.ElementType> = {
   free: BookOpen,
   single_exam: Package,
   readiness_pack: Zap,
-  workforce: Building2,
+  workforce_5: Building2,
+  workforce_10: Building2,
+  workforce_25: Building2,
 };
 
 interface PricingCardsProps {
@@ -29,15 +31,11 @@ export default function PricingCards({
   const [hovered, setHovered] = useState<string | null>(null);
   const router = useRouter();
 
-  const tiers = showWorkforce ? PRICING_TIERS : PRICING_TIERS.filter((t) => t.id !== "workforce");
+  const tiers = showWorkforce ? PRICING_TIERS : PRICING_TIERS.filter((t) => !t.id.startsWith("workforce"));
 
-  const handleClick = (productKey: PricingProductKey, pricingType: string) => {
+  const handleClick = (productKey: PricingProductKey) => {
     if (onSelect) {
       onSelect(productKey);
-      return;
-    }
-    if (pricingType === "contact") {
-      window.location.assign("mailto:hello@readymetry.com?subject=Workforce%20Plan%20Inquiry");
       return;
     }
     router.push(ROUTES.signup);
@@ -48,6 +46,7 @@ export default function PricingCards({
       {tiers.map((tier, i) => {
         const Icon = ICONS[tier.productKey];
         const isHighlight = tier.highlight;
+        const isWorkforce = tier.id.startsWith("workforce");
         const isHovered = hovered === tier.id;
         const loading = isLoading === tier.productKey;
         const cta = ctaOverride?.[tier.productKey] ?? tier.cta;
@@ -68,7 +67,7 @@ export default function PricingCards({
               className={`relative h-full rounded-3xl flex flex-col overflow-hidden border transition-shadow duration-300 ${
                 isHighlight
                   ? "bg-gradient-to-br from-[#6D28D9] to-[#4c1d95] border-purple-600 shadow-[0_16px_56px_rgba(109,40,217,0.45)]"
-                  : tier.id === "workforce"
+                  : isWorkforce
                   ? "bg-[#0f0f14] border-[#2a2a38] text-white"
                   : "bg-white border-border shadow-sm hover:shadow-md"
               }`}
@@ -85,13 +84,13 @@ export default function PricingCards({
                 {/* Icon + Name */}
                 <div className="flex items-center gap-3 mb-5">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    isHighlight ? "bg-white/20" : tier.id === "workforce" ? "bg-white/10" : "bg-brand-50"
+                    isHighlight ? "bg-white/20" : isWorkforce ? "bg-white/10" : "bg-brand-50"
                   }`}>
-                    <Icon size={18} className={isHighlight || tier.id === "workforce" ? "text-white" : "text-brand-700"} />
+                    <Icon size={18} className={isHighlight || isWorkforce ? "text-white" : "text-brand-700"} />
                   </div>
                   <div>
                     <p className={`text-xs font-semibold uppercase tracking-wide ${
-                      isHighlight ? "text-purple-200" : tier.id === "workforce" ? "text-gray-400" : "text-muted"
+                      isHighlight ? "text-purple-200" : isWorkforce ? "text-gray-400" : "text-muted"
                     }`}>
                       {tier.name}
                     </p>
@@ -102,13 +101,13 @@ export default function PricingCards({
                 <div className="mb-4">
                   <div className="flex items-baseline gap-1.5">
                     <span className={`text-4xl font-extrabold tracking-tight ${
-                      isHighlight || tier.id === "workforce" ? "text-white" : "text-foreground"
+                      isHighlight || isWorkforce ? "text-white" : "text-foreground"
                     }`}>
                       {tier.priceLabel}
                     </span>
                     {tier.priceNote && (
                       <span className={`text-sm ${
-                        isHighlight ? "text-purple-200" : tier.id === "workforce" ? "text-gray-400" : "text-muted"
+                        isHighlight ? "text-purple-200" : isWorkforce ? "text-gray-400" : "text-muted"
                       }`}>
                         {tier.priceNote}
                       </span>
@@ -125,7 +124,7 @@ export default function PricingCards({
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.18 }}
                     className={`text-xs leading-relaxed mb-6 min-h-[3.5rem] ${
-                      isHighlight ? "text-purple-100" : tier.id === "workforce" ? "text-gray-400" : "text-muted"
+                      isHighlight ? "text-purple-100" : isWorkforce ? "text-gray-400" : "text-muted"
                     }`}
                   >
                     {isHovered ? tier.tooltip : tier.tagline}
@@ -143,14 +142,14 @@ export default function PricingCards({
                             ? "bg-gray-100"
                             : isHighlight
                             ? "bg-white/20"
-                            : tier.id === "workforce"
+                            : isWorkforce
                             ? "bg-white/10"
                             : "bg-brand-50"
                         }`}>
                           {isLocked ? (
                             <Lock size={8} className="text-gray-400" />
                           ) : (
-                            <Check size={9} className={isHighlight || tier.id === "workforce" ? "text-white" : "text-brand-700"} />
+                            <Check size={9} className={isHighlight || isWorkforce ? "text-white" : "text-brand-700"} />
                           )}
                         </div>
                         <span className={`text-xs leading-relaxed ${
@@ -158,7 +157,7 @@ export default function PricingCards({
                             ? "blur-[3px] select-none text-gray-400"
                             : isHighlight
                             ? "text-purple-100"
-                            : tier.id === "workforce"
+                            : isWorkforce
                             ? "text-gray-300"
                             : "text-muted"
                         }`}>
@@ -174,12 +173,12 @@ export default function PricingCards({
 
                 {/* CTA */}
                 <button
-                  onClick={() => handleClick(tier.productKey, tier.pricingType)}
+                  onClick={() => handleClick(tier.productKey)}
                   disabled={!!isLoading}
                   className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 ${
                     isHighlight
                       ? "bg-white text-brand-700 hover:bg-brand-50 shadow-lg"
-                      : tier.id === "workforce"
+                      : isWorkforce
                       ? "bg-white/10 text-white border border-white/20 hover:bg-white/20"
                       : tier.id === "free"
                       ? "border border-border bg-white text-foreground hover:bg-[#F5F5F8]"

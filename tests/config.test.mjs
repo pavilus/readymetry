@@ -13,6 +13,7 @@ test("required public and operational routes exist", () => {
     "src/app/(marketing)/contact/page.tsx",
     "src/app/api/health/route.ts",
     "src/app/(dashboard)/support/page.tsx",
+    "src/app/(dashboard)/team/page.tsx",
     "src/app/sitemap.ts",
     "src/app/robots.ts",
     "src/app/opengraph-image.tsx",
@@ -60,6 +61,22 @@ test("exam products preserve per-session entitlements", () => {
   assert.ok(migration.indexOf("IF v_credits > 0") < migration.indexOf("IF NOT coalesce(v_free_consumed"), "paid credits must be used before the Free Trial");
   assert.match(exams, /entitlements: \{ hasDetailedResults: false, hasFullAnalytics: false \}/);
   assert.match(exams, /access_type: accessType/);
+});
+
+test("workforce is self-serve through Stripe and team seats", () => {
+  const constants = fs.readFileSync("src/lib/constants.ts", "utf8");
+  const billing = fs.readFileSync("src/lib/actions/billing.ts", "utf8");
+  const pricing = fs.readFileSync("src/app/(marketing)/pricing/page.tsx", "utf8");
+  const migration = fs.readFileSync("supabase/migrations/20260605000001_workforce_self_serve.sql", "utf8");
+  assert.match(constants, /workforce_5/);
+  assert.match(constants, /workforce_10/);
+  assert.match(constants, /workforce_25/);
+  assert.match(billing, /STRIPE_WORKFORCE_5_PRICE_ID/);
+  assert.match(pricing, /createCheckoutSession\(product\)/);
+  assert.doesNotMatch(pricing, /Workforce%20Plan%20Inquiry/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS workforce_organizations/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS workforce_members/);
+  assert.match(migration, /claim_workforce_invitation/);
 });
 
 test("question-bank growth is reviewed and balanced", () => {

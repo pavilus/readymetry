@@ -2,11 +2,13 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ROUTES } from "@/lib/constants";
 import DashboardSidebar from "./DashboardSidebar";
+import { claimWorkforceInviteForCurrentUser } from "@/lib/actions/team";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(ROUTES.login);
+  await claimWorkforceInviteForCurrentUser();
 
   const [{ data: profileRaw }, { data: enrollment }] = await Promise.all([
     supabase.from("user_profiles").select("full_name, subscription_tier").eq("id", user.id).maybeSingle(),

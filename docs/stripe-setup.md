@@ -4,9 +4,12 @@ Readymetry keeps payment secrets in server environment variables. Never put a St
 
 ## Required values
 
-1. In Stripe, create two one-time payment products:
+1. In Stripe, create five one-time payment products:
    - Single Exam
    - Readiness Pack
+   - Workforce 5
+   - Workforce 10
+   - Workforce 25
 2. Copy each product's `price_...` ID.
 3. Copy the Stripe secret key from **Developers > API keys**.
 4. Create a webhook endpoint for:
@@ -25,6 +28,9 @@ STRIPE_SECRET_KEY=sk_live_or_test_key
 STRIPE_WEBHOOK_SECRET=whsec_signing_secret
 STRIPE_SINGLE_EXAM_PRICE_ID=price_single_exam
 STRIPE_READINESS_PACK_PRICE_ID=price_readiness_pack
+STRIPE_WORKFORCE_5_PRICE_ID=price_workforce_5
+STRIPE_WORKFORCE_10_PRICE_ID=price_workforce_10
+STRIPE_WORKFORCE_25_PRICE_ID=price_workforce_25
 ```
 
-After changing production values, rebuild and restart the Next.js process. Confirm status at `/admin/integrations`, then complete one Stripe test-mode purchase and verify that the user's exam credits increase exactly once.
+After changing production values, rebuild and restart the Next.js process. Confirm status at `/admin/integrations`, then complete one Stripe test-mode purchase and verify that exam credits or Workforce seats are fulfilled exactly once.

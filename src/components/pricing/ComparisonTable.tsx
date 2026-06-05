@@ -43,9 +43,9 @@ const TABLE_DATA: Section[] = [
   {
     category: "Organization Access",
     rows: [
-      { feature: "Sales-led team rollout", free: false, single: false, pack: false, workforce: "Contact sales" },
-      { feature: "Program requirements review", free: false, single: false, pack: false, workforce: true },
-      { feature: "Dedicated onboarding support", free: false, single: false, pack: false, workforce: true },
+      { feature: "Self-serve team checkout", free: false, single: false, pack: false, workforce: true },
+      { feature: "Team seat management", free: false, single: false, pack: false, workforce: true },
+      { feature: "Invite members by email", free: false, single: false, pack: false, workforce: true },
     ],
   },
 ];
@@ -54,7 +54,7 @@ const COLUMNS = [
   { key: "free", label: "Free Trial", sub: "$0" },
   { key: "single", label: "Exam Credit", sub: "$39" },
   { key: "pack", label: "Readiness Pack", sub: "$99", highlight: true },
-  { key: "workforce", label: "Workforce", sub: "Custom" },
+  { key: "workforce", label: "Workforce", sub: "5-25 seats" },
 ];
 
 function Cell({ value, highlight }: { value: CellValue; highlight?: boolean }) {

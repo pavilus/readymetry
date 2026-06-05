@@ -6,7 +6,15 @@ import { adminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
 
-export type PurchaseType = "single_exam" | "readiness_pack";
+export type PurchaseType = "single_exam" | "readiness_pack" | "workforce_5" | "workforce_10" | "workforce_25";
+
+const PRICE_ENV: Record<PurchaseType, string> = {
+  single_exam: "STRIPE_SINGLE_EXAM_PRICE_ID",
+  readiness_pack: "STRIPE_READINESS_PACK_PRICE_ID",
+  workforce_5: "STRIPE_WORKFORCE_5_PRICE_ID",
+  workforce_10: "STRIPE_WORKFORCE_10_PRICE_ID",
+  workforce_25: "STRIPE_WORKFORCE_25_PRICE_ID",
+};
 
 async function getOrCreateStripeCustomer(supabase: any, user: { id: string; email?: string }) {
   const { data: profile } = await supabase
@@ -53,9 +61,7 @@ export async function createCheckoutSession(product: PurchaseType) {
   const stripe = getStripe();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://readymetry.com";
 
-  const priceId = product === "single_exam"
-    ? process.env.STRIPE_SINGLE_EXAM_PRICE_ID
-    : process.env.STRIPE_READINESS_PACK_PRICE_ID;
+  const priceId = process.env[PRICE_ENV[product]];
   if (!priceId) throw new Error(`Stripe price is not configured for ${product}`);
 
   const session = await stripe.checkout.sessions.create({

@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       p_user_id: userId,
       p_product: product,
       p_customer_id: typeof session.customer === "string" ? session.customer : null,
+      p_checkout_session_id: session.id,
     });
     if (error) return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }

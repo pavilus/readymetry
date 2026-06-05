@@ -25,15 +25,20 @@ export default function PlanPage() {
       }
       return;
     }
-    if (product === "workforce") {
-      window.location.href = "mailto:hello@readymetry.com?subject=Workforce%20Plan%20Inquiry";
+    if (product.startsWith("workforce")) {
+      setLoading(product);
+      try {
+        await createCheckoutSession(product);
+      } catch {
+        setLoading(null);
+      }
       return;
     }
     setModalProduct(product);
   };
 
   const handleConfirm = async (product: PricingProductKey) => {
-    if (product === "single_exam" || product === "readiness_pack") {
+    if (product !== "free") {
       setLoading(product);
       setModalProduct(null);
       try {
@@ -71,9 +76,11 @@ export default function PlanPage() {
             free: "Start Free",
             single_exam: "Buy — $39",
             readiness_pack: "Get Fully Ready — $99",
-            workforce: "Contact Sales",
+            workforce_5: "Buy Team 5",
+            workforce_10: "Buy Team 10",
+            workforce_25: "Buy Team 25",
           }}
-          showWorkforce={false}
+          showWorkforce
         />
       </div>
 
@@ -82,7 +89,7 @@ export default function PlanPage() {
         <a href="mailto:hello@readymetry.com" className="text-brand-700 hover:underline">Contact us</a>
       </p>
 
-      {modalProduct && modalProduct !== "free" && modalProduct !== "workforce" && (
+      {modalProduct && modalProduct !== "free" && !modalProduct.startsWith("workforce") && (
         <CheckoutModal
           product={modalProduct}
           onClose={() => setModalProduct(null)}

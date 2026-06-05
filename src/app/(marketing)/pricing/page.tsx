@@ -31,7 +31,7 @@ const FAQ = [
   },
   {
     q: "What is the Workforce plan?",
-    a: "Workforce is a sales-led offering for organizations preparing teams for certification. Contact us to discuss your program, requirements, and rollout.",
+    a: "Workforce is now self-serve. Choose a 5, 10, or 25 seat tier, check out with Stripe, then invite team members from the Team page.",
   },
   {
     q: "Do you offer refunds?",
@@ -73,8 +73,12 @@ export default function PricingPage() {
       router.push(ROUTES.signup);
       return;
     }
-    if (product === "workforce") {
-      window.location.href = "mailto:hello@readymetry.com?subject=Workforce%20Plan%20Inquiry";
+    if (product.startsWith("workforce")) {
+      setLoadingPlan(product);
+      void createCheckoutSession(product).catch(() => {
+        setLoadingPlan(null);
+        router.push(`${ROUTES.signup}?intent=${product}`);
+      });
       return;
     }
     setModalProduct(product);
@@ -89,9 +93,7 @@ export default function PricingPage() {
     setModalProduct(null);
     try {
       // If user is not signed in, they'll be redirected to login by the server action
-      if (product === "single_exam" || product === "readiness_pack") {
-        await createCheckoutSession(product);
-      }
+      await createCheckoutSession(product);
     } catch {
       router.push(ROUTES.signup);
     } finally {
@@ -186,7 +188,7 @@ export default function PricingPage() {
       <Footer />
 
       {/* Checkout Modal */}
-      {modalProduct && modalProduct !== "free" && modalProduct !== "workforce" && (
+      {modalProduct && modalProduct !== "free" && !modalProduct.startsWith("workforce") && (
         <CheckoutModal
           product={modalProduct}
           onClose={() => setModalProduct(null)}

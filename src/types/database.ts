@@ -260,6 +260,61 @@ export interface Database {
         };
         Update: never;
       };
+      workforce_organizations: {
+        Row: {
+          id: string;
+          owner_user_id: string;
+          name: string;
+          seat_limit: number;
+          stripe_customer_id: string | null;
+          stripe_checkout_session_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_user_id: string;
+          name: string;
+          seat_limit: number;
+          stripe_customer_id?: string | null;
+          stripe_checkout_session_id?: string | null;
+        };
+        Update: Partial<{
+          name: string;
+          seat_limit: number;
+          stripe_customer_id: string | null;
+          stripe_checkout_session_id: string | null;
+          updated_at: string;
+        }>;
+      };
+      workforce_members: {
+        Row: {
+          id: string;
+          organization_id: string;
+          user_id: string | null;
+          email: string;
+          role: "owner" | "member";
+          status: "pending" | "active" | "removed";
+          invited_at: string;
+          joined_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          user_id?: string | null;
+          email: string;
+          role?: "owner" | "member";
+          status?: "pending" | "active" | "removed";
+          joined_at?: string | null;
+        };
+        Update: Partial<{
+          user_id: string | null;
+          email: string;
+          role: "owner" | "member";
+          status: "pending" | "active" | "removed";
+          joined_at: string | null;
+        }>;
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -290,7 +345,12 @@ export interface Database {
           p_user_id: string;
           p_product: string;
           p_customer_id?: string | null;
+          p_checkout_session_id?: string | null;
         };
+        Returns: boolean;
+      };
+      claim_workforce_invitation: {
+        Args: { p_user_id: string; p_email: string };
         Returns: boolean;
       };
     };

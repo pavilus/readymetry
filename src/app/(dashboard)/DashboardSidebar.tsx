@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, BookOpen, BarChart2, Settings, LogOut, LifeBuoy } from "lucide-react";
+import { LayoutDashboard, BookOpen, BarChart2, Settings, LogOut, LifeBuoy, Users } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/actions/account";
@@ -12,6 +12,7 @@ const NAV = [
   { icon: LayoutDashboard, label: "Dashboard", href: ROUTES.dashboard },
   { icon: BookOpen, label: "Practice Tests", href: ROUTES.exams },
   { icon: BarChart2, label: "Analytics", href: ROUTES.analytics },
+  { icon: Users, label: "Team", href: ROUTES.team },
   { icon: LifeBuoy, label: "Support", href: ROUTES.support },
   { icon: Settings, label: "Settings", href: ROUTES.settings },
 ];
