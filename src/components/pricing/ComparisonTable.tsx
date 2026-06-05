@@ -60,7 +60,7 @@ const COLUMNS = [
 function Cell({ value, highlight }: { value: CellValue; highlight?: boolean }) {
   if (value === true) {
     return (
-      <div className={`flex justify-center ${highlight ? "text-white" : "text-brand-700"}`}>
+      <div className="flex justify-center text-brand-700">
         <Check size={16} strokeWidth={2.5} />
       </div>
     );
