@@ -60,6 +60,12 @@
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-padding-top: 11rem;
+  scroll-behavior: smooth;
+}
+
+[id] {
+  scroll-margin-top: 11rem;
 }
 
 body {
