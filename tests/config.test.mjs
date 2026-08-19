@@ -78,11 +78,15 @@ test("security headers remain configured", () => {
 
 test("exam products preserve per-session entitlements", () => {
   const migration = fs.readFileSync("supabase/migrations/20260604000008_product_entitlements.sql", "utf8");
+  const atomic = fs.readFileSync("supabase/migrations/20260819000002_atomic_exam_lifecycle.sql", "utf8");
   const exams = fs.readFileSync("src/lib/actions/exams.ts", "utf8");
   assert.match(migration, /access_type IN \('free', 'credit', 'workforce'\)/);
   assert.ok(migration.indexOf("IF v_credits > 0") < migration.indexOf("IF NOT coalesce(v_free_consumed"), "paid credits must be used before the Free Trial");
   assert.match(exams, /entitlements: \{ hasDetailedResults: false, hasFullAnalytics: false \}/);
-  assert.match(exams, /access_type: accessType/);
+  assert.match(exams, /create_exam_session_with_access/);
+  assert.match(exams, /submit_exam_session_atomic/);
+  assert.match(atomic, /FOR UPDATE/);
+  assert.match(atomic, /GRANT EXECUTE ON FUNCTION submit_exam_session_atomic.*TO service_role/s);
 });
 
 test("workforce is self-serve through Stripe and team seats", () => {

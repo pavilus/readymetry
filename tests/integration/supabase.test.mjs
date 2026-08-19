@@ -171,6 +171,119 @@ test("exam sessions, answers, and analytics remain isolated by user", async () =
   assert.ok(crossUserAnalytics.error, "analytics RPCs must reject a different user ID");
 });
 
+test("exam lifecycle rejects malformed submissions and completes only once", async () => {
+  const questions = await admin.from("questions")
+    .select("id, certification_id, correct_answer")
+    .eq("certification_id", "11111111-0000-0000-0000-000000000001")
+    .eq("review_status", "published")
+    .limit(2);
+  assert.ifError(questions.error);
+  assert.equal(questions.data.length, 2);
+  assert.equal(questions.data[0].certification_id, questions.data[1].certification_id);
+
+  const reset = await admin.from("user_profiles").update({
+    subscription_tier: "starter",
+    purchased_exam_credits: 2,
+    free_exam_consumed: false,
+  }).eq("id", userTwo.id);
+  assert.ifError(reset.error);
+
+  const deniedCreation = await clientTwo.rpc("create_exam_session_with_access", {
+    p_user_id: userTwo.id,
+    p_certification_id: questions.data[0].certification_id,
+    p_exam_type: "practice",
+    p_categories: [],
+    p_question_ids: questions.data.map((question) => question.id),
+  });
+  assert.ok(deniedCreation.error, "session creation must remain server-only");
+
+  const created = await admin.rpc("create_exam_session_with_access", {
+    p_user_id: userTwo.id,
+    p_certification_id: questions.data[0].certification_id,
+    p_exam_type: "practice",
+    p_categories: [],
+    p_question_ids: questions.data.map((question) => question.id),
+  });
+  assert.ifError(created.error);
+  assert.equal(created.data.access_type, "credit");
+
+  const duplicateAnswers = questions.data.map((question) => ({
+    questionId: questions.data[0].id,
+    selectedAnswer: question.correct_answer,
+    timeSpentSeconds: 5,
+    confidenceLevel: "confident",
+    flagged: false,
+  }));
+  const malformed = await admin.rpc("submit_exam_session_atomic", {
+    p_user_id: userTwo.id,
+    p_session_id: created.data.id,
+    p_answers: duplicateAnswers,
+    p_time_taken_seconds: 10,
+  });
+  assert.ok(malformed.error);
+  const unchanged = await admin.from("exam_sessions").select("status").eq("id", created.data.id).single();
+  assert.ifError(unchanged.error);
+  assert.equal(unchanged.data.status, "in_progress");
+  const noPartialAnswers = await admin.from("user_answers").select("id", { count: "exact", head: true }).eq("session_id", created.data.id);
+  assert.ifError(noPartialAnswers.error);
+  assert.equal(noPartialAnswers.count, 0);
+
+  const answers = questions.data.map((question) => ({
+    questionId: question.id,
+    selectedAnswer: question.correct_answer,
+    timeSpentSeconds: 5,
+    confidenceLevel: "confident",
+    flagged: false,
+  }));
+  const args = {
+    p_user_id: userTwo.id,
+    p_session_id: created.data.id,
+    p_answers: answers,
+    p_time_taken_seconds: 10,
+  };
+  const attempts = await Promise.all([admin.rpc("submit_exam_session_atomic", args), admin.rpc("submit_exam_session_atomic", args)]);
+  const successes = attempts.filter((attempt) => !attempt.error);
+  const failures = attempts.filter((attempt) => attempt.error);
+  assert.equal(successes.length, 1);
+  assert.equal(failures.length, 1);
+  assert.deepEqual(successes[0].data, { sessionId: created.data.id, score: 100, correct: 2, total: 2 });
+
+  const completed = await admin.from("exam_sessions").select("status, score, correct_answers").eq("id", created.data.id).single();
+  assert.ifError(completed.error);
+  assert.deepEqual(completed.data, { status: "completed", score: 100, correct_answers: 2 });
+  const storedAnswers = await admin.from("user_answers").select("id", { count: "exact", head: true }).eq("session_id", created.data.id);
+  assert.ifError(storedAnswers.error);
+  assert.equal(storedAnswers.count, 2);
+
+  const timed = await admin.rpc("create_exam_session_with_access", {
+    p_user_id: userTwo.id,
+    p_certification_id: questions.data[0].certification_id,
+    p_exam_type: "timed_simulation",
+    p_categories: [],
+    p_question_ids: questions.data.map((question) => question.id),
+  });
+  assert.ifError(timed.error);
+  const expire = await admin.from("exam_sessions").update({
+    expires_at: new Date(Date.now() - 1000).toISOString(),
+    progress: { answers: [questions.data[0].correct_answer, null] },
+  }).eq("id", timed.data.id);
+  assert.ifError(expire.error);
+  const expiredSubmission = await admin.rpc("submit_exam_session_atomic", {
+    p_user_id: userTwo.id,
+    p_session_id: timed.data.id,
+    p_answers: questions.data.map((question) => ({
+      questionId: question.id,
+      selectedAnswer: "",
+      timeSpentSeconds: 5,
+      confidenceLevel: null,
+      flagged: false,
+    })),
+    p_time_taken_seconds: 180,
+  });
+  assert.ifError(expiredSubmission.error);
+  assert.deepEqual(expiredSubmission.data, { sessionId: timed.data.id, score: 50, correct: 1, total: 2 });
+});
+
 test("Stripe fulfillment is idempotent", async () => {
   const reset = await admin.from("user_profiles").update({ purchased_exam_credits: 0 }).eq("id", userOne.id);
   assert.ifError(reset.error);

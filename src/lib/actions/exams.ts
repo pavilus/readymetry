@@ -105,34 +105,14 @@ export async function startExamSession(opts: StartSessionOptions) {
   );
   const shuffled = selectBalancedQuestions(questions, opts.questionCount, recentlySeenIds);
 
-  const { data: accessType, error: accessErr } = await admin.rpc("consume_exam_access", {
+  const { data: session, error: sErr } = await admin.rpc("create_exam_session_with_access", {
     p_user_id: user.id,
+    p_certification_id: opts.certificationId,
+    p_exam_type: opts.examType,
+    p_categories: opts.categories,
+    p_question_ids: shuffled.map((question: { id: string }) => question.id),
   });
-  if (accessErr) throw new Error(accessErr.message);
-
-  const { data: session, error: sErr } = await admin
-    .from("exam_sessions")
-    .insert({
-      user_id: user.id,
-      certification_id: opts.certificationId,
-      exam_type: opts.examType,
-      status: "in_progress",
-      total_questions: shuffled.length,
-      categories: opts.categories.length > 0 ? opts.categories : null,
-      question_ids: shuffled.map((question: { id: string }) => question.id),
-      remaining_seconds: opts.examType === "timed_simulation" ? shuffled.length * 90 : null,
-      expires_at: opts.examType === "timed_simulation"
-        ? new Date(Date.now() + shuffled.length * 90 * 1000).toISOString()
-        : null,
-      access_type: accessType,
-    })
-    .select()
-    .single();
-
-  if (sErr) {
-    await admin.rpc("refund_exam_access", { p_user_id: user.id, p_access_type: accessType });
-    throw new Error(sErr.message);
-  }
+  if (sErr) throw new Error(sErr.message);
 
   return { session, questions: shuffled };
 }
@@ -245,80 +225,19 @@ export async function submitExamSession(payload: SubmitSessionPayload) {
   if (!user) throw new Error("Not authenticated");
 
   const admin = adminClient();
-  const { data: session, error: sessionErr } = await admin
-    .from("exam_sessions")
-    .select("id, status, question_ids, exam_type, expires_at, progress")
-    .eq("id", payload.sessionId)
-    .eq("user_id", user.id)
-    .single();
-
-  if (sessionErr || !session) throw new Error("Exam session not found");
-  if (session.status !== "in_progress") throw new Error("Exam session has already been submitted");
-  if (!payload.answers.length) throw new Error("No answers submitted");
-
-  const timedExpired = session.exam_type === "timed_simulation"
-    && session.expires_at
-    && new Date(session.expires_at).getTime() <= Date.now();
-  const expiredProgress = timedExpired ? session.progress as ExamProgress | null : null;
-  const submittedAnswers = timedExpired
-    ? payload.answers.map((answer, index) => ({ ...answer, selectedAnswer: expiredProgress?.answers[index] ?? "" }))
-    : payload.answers;
-
-  const questionIds = submittedAnswers.map((a) => a.questionId);
-  if (new Set(questionIds).size !== questionIds.length) throw new Error("Duplicate answers submitted");
-
-  const allowedIds = new Set((session.question_ids ?? []) as string[]);
-  if (questionIds.length !== allowedIds.size || !questionIds.every((id) => allowedIds.has(id))) {
-    throw new Error("Submission contains questions outside this exam session");
-  }
-
-  const { data: questions } = await admin
-    .from("questions")
-    .select("id, correct_answer")
-    .in("id", questionIds);
-
-  if (!questions || questions.length !== questionIds.length) throw new Error("Failed to fetch questions");
-
-  const correctMap = Object.fromEntries((questions as { id: string; correct_answer: string }[]).map((q) => [q.id, q.correct_answer]));
-
-  const answerRows = submittedAnswers.map((a) => ({
-    session_id: payload.sessionId,
-    question_id: a.questionId,
-    selected_answer: a.selectedAnswer,
-    is_correct: correctMap[a.questionId] === a.selectedAnswer,
-    time_spent_seconds: a.timeSpentSeconds,
-    confidence_level: a.confidenceLevel,
-    flagged: a.flagged,
-  }));
-
-  const { error: answerErr } = await admin
-    .from("user_answers")
-    .upsert(answerRows, { onConflict: "session_id,question_id" });
-  if (answerErr) throw new Error(answerErr.message);
-
-  const correct = (answerRows as { is_correct: boolean }[]).filter((a) => a.is_correct).length;
-  const score = Math.round((correct / answerRows.length) * 100);
-
-  const { error } = await admin
-    .from("exam_sessions")
-    .update({
-      status: "completed",
-      score,
-      correct_answers: correct,
-      time_taken_seconds: payload.timeTakenSeconds,
-      completed_at: new Date().toISOString(),
-      progress: null,
-      remaining_seconds: 0,
-    })
-    .eq("id", payload.sessionId)
-    .eq("user_id", user.id);
-
+  const { data, error } = await admin.rpc("submit_exam_session_atomic", {
+    p_user_id: user.id,
+    p_session_id: payload.sessionId,
+    p_answers: payload.answers,
+    p_time_taken_seconds: payload.timeTakenSeconds,
+  });
   if (error) throw new Error(error.message);
+  const result = data as { sessionId: string; score: number; correct: number; total: number };
 
   revalidatePath("/dashboard");
   revalidatePath("/analytics");
 
-  return { sessionId: payload.sessionId, score, correct, total: answerRows.length };
+  return result;
 }
 
 export async function getSessionResults(sessionId: string) {
