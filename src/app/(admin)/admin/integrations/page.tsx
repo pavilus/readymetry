@@ -12,6 +12,9 @@ const VARIABLES = [
   { key: "STRIPE_WORKFORCE_10_PRICE_ID", label: "Workforce 10 price ID", group: "Stripe" },
   { key: "STRIPE_WORKFORCE_25_PRICE_ID", label: "Workforce 25 price ID", group: "Stripe" },
   { key: "NEXT_PUBLIC_APP_URL", label: "Application URL", group: "Application" },
+  { key: "NEXT_PUBLIC_TURNSTILE_SITE_KEY", label: "Turnstile site key", group: "Operations" },
+  { key: "SUPABASE_CUSTOM_SMTP_ENABLED", label: "Custom SMTP confirmed", group: "Operations" },
+  { key: "ERROR_MONITOR_WEBHOOK_URL", label: "Error monitor endpoint", group: "Operations" },
 ] as const;
 
 function maskedHint(key: string) {

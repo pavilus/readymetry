@@ -7,6 +7,7 @@ import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import AuthCard from "@/components/shared/AuthCard";
 import { ROUTES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import AuthCaptcha, { authCaptchaEnabled } from "@/components/shared/AuthCaptcha";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -14,11 +15,14 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [confirmationSent, setConfirmationSent] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (authCaptchaEnabled && !captchaToken) { setError("Please complete the security check"); return; }
     setLoading(true);
     setError("");
     const supabase = createClient();
@@ -29,13 +33,16 @@ export default function SignupPage() {
       password: form.password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        captchaToken: captchaToken ?? undefined,
         data: {
           full_name: form.fullName,
           account_type: "individual",
         },
       },
     });
-    if (signUpError) { setError(signUpError.message); setLoading(false); return; }
+    if (signUpError) {
+      setError(signUpError.message); setLoading(false); setCaptchaToken(null); setCaptchaReset((value) => value + 1); return;
+    }
     if (!data.session) {
       setConfirmationSent(true);
       setLoading(false);
@@ -87,7 +94,9 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <button type="submit" disabled={loading}
+        <AuthCaptcha onToken={setCaptchaToken} resetKey={captchaReset} />
+
+        <button type="submit" disabled={loading || (authCaptchaEnabled && !captchaToken)}
           className="mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-700 text-white text-sm font-semibold hover:bg-brand-800 disabled:opacity-60 transition-colors shadow-[0_4px_14px_rgba(109,40,217,0.35)]">
           {loading ? <Loader2 size={16} className="animate-spin" /> : <>Create Account <ArrowRight size={16} /></>}
         </button>

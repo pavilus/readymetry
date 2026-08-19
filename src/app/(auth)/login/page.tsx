@@ -7,6 +7,7 @@ import { Eye, EyeOff, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import AuthCard from "@/components/shared/AuthCard";
 import { ROUTES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import AuthCaptcha, { authCaptchaEnabled } from "@/components/shared/AuthCaptcha";
 
 function LoginForm() {
   const router = useRouter();
@@ -17,20 +18,26 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
   const [form, setForm] = useState({ email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (authCaptchaEnabled && !captchaToken) { setError("Please complete the security check"); return; }
     setLoading(true);
     setError("");
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email: form.email,
       password: form.password,
+      options: { captchaToken: captchaToken ?? undefined },
     });
     if (error) {
       setError(error.message);
       setLoading(false);
+      setCaptchaToken(null);
+      setCaptchaReset((value) => value + 1);
     } else {
       router.push(redirectTo || ROUTES.dashboard);
     }
@@ -110,10 +117,12 @@ function LoginForm() {
           </div>
         </div>
 
+        <AuthCaptcha onToken={setCaptchaToken} resetKey={captchaReset} />
+
         {/* Submit */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (authCaptchaEnabled && !captchaToken)}
           className="mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-700 text-white text-sm font-semibold hover:bg-brand-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-[0_4px_14px_rgba(109,40,217,0.35)]"
         >
           {loading ? (

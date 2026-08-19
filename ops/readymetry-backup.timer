@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Readymetry encrypted database backup weekly
+
+[Timer]
+OnCalendar=Sun *-*-* 03:00:00 UTC
+Persistent=true
+RandomizedDelaySec=900
+Unit=readymetry-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -14,9 +14,12 @@
     "test": "node --test tests/*.test.mjs",
     "test:integration": "node --test --test-concurrency=1 tests/integration/*.test.mjs",
     "questions:audit": "node scripts/audit-question-bank.mjs",
-    "env:check": "node scripts/check-environment.mjs"
+    "env:check": "node scripts/check-environment.mjs",
+    "backup": "./scripts/backup-database.sh",
+    "restore:verify": "./scripts/verify-restored-database.sh"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.6.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

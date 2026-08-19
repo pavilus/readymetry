@@ -1,0 +1,12 @@
+[Unit]
+Description=Create encrypted Readymetry database backup
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/readymetry
+EnvironmentFile=/etc/readymetry/backup.env
+ExecStart=/root/readymetry/scripts/backup-database.sh
+PrivateTmp=true
+NoNewPrivileges=true

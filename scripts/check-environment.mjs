@@ -13,7 +13,12 @@ const REQUIRED_VARIABLES = [
   "STRIPE_WORKFORCE_5_PRICE_ID",
   "STRIPE_WORKFORCE_10_PRICE_ID",
   "STRIPE_WORKFORCE_25_PRICE_ID",
+  "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+  "SUPABASE_CUSTOM_SMTP_ENABLED",
+  "ERROR_MONITOR_WEBHOOK_URL",
 ];
+
+const TRUE_VARIABLES = ["SUPABASE_CUSTOM_SMTP_ENABLED"];
 
 const ENV_FILES = [".env.production.local", ".env.local", ".env.production", ".env"];
 
@@ -45,9 +50,11 @@ const fileValues = ENV_FILES.reduce((values, filename) => {
 }, {});
 
 const missing = REQUIRED_VARIABLES.filter((name) => !(process.env[name] || fileValues[name]));
+const invalid = TRUE_VARIABLES.filter((name) => (process.env[name] || fileValues[name]) !== "true");
 
-if (missing.length > 0) {
+if (missing.length > 0 || invalid.length > 0) {
   console.error(`Missing required environment variables: ${missing.join(", ")}`);
+  if (invalid.length > 0) console.error(`Environment variables that must equal true: ${invalid.join(", ")}`);
   process.exitCode = 1;
 } else {
   console.log(`Environment preflight passed (${REQUIRED_VARIABLES.length} required variables present).`);

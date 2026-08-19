@@ -14,6 +14,9 @@ const requiredEnvironment = {
   STRIPE_WORKFORCE_5_PRICE_ID: "price_workforce_5",
   STRIPE_WORKFORCE_10_PRICE_ID: "price_workforce_10",
   STRIPE_WORKFORCE_25_PRICE_ID: "price_workforce_25",
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
+  SUPABASE_CUSTOM_SMTP_ENABLED: "true",
+  ERROR_MONITOR_WEBHOOK_URL: "https://monitor.example/events",
 };
 
 test("environment preflight succeeds without printing secret values", () => {
@@ -25,6 +28,15 @@ test("environment preflight succeeds without printing secret values", () => {
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /Environment preflight passed/);
   assert.doesNotMatch(result.stdout, /test-service-role-key|sk_test_example/);
+});
+
+test("environment preflight rejects an unconfirmed SMTP marker", () => {
+  const result = spawnSync(process.execPath, ["scripts/check-environment.mjs"], {
+    encoding: "utf8",
+    env: { PATH: process.env.PATH, ...requiredEnvironment, SUPABASE_CUSTOM_SMTP_ENABLED: "false" },
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /SUPABASE_CUSTOM_SMTP_ENABLED/);
 });
 
 test("environment preflight identifies missing variable names", () => {

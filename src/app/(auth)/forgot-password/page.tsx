@@ -6,23 +6,28 @@ import { ArrowLeft, Loader2, CheckCircle } from "lucide-react";
 import AuthCard from "@/components/shared/AuthCard";
 import { ROUTES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import AuthCaptcha, { authCaptchaEnabled } from "@/components/shared/AuthCaptcha";
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (authCaptchaEnabled && !captchaToken) { setError("Please complete the security check"); return; }
     setLoading(true);
     setError("");
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?type=recovery`,
+      captchaToken: captchaToken ?? undefined,
     });
     setLoading(false);
-    if (error) { setError(error.message); return; }
+    if (error) { setError(error.message); setCaptchaToken(null); setCaptchaReset((value) => value + 1); return; }
     setSent(true);
   };
 
@@ -51,6 +56,8 @@ export default function ForgotPasswordPage() {
               <span className="font-medium text-foreground">{email}</span>
             </p>
           </div>
+          <AuthCaptcha onToken={setCaptchaToken} resetKey={captchaReset} />
+
           <button
             onClick={() => setSent(false)}
             className="text-xs text-muted hover:text-foreground underline transition-colors"
@@ -78,7 +85,7 @@ export default function ForgotPasswordPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (authCaptchaEnabled && !captchaToken)}
             className="mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-700 text-white text-sm font-semibold hover:bg-brand-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-[0_4px_14px_rgba(109,40,217,0.35)]"
           >
             {loading ? (

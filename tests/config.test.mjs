@@ -77,6 +77,22 @@ test("security headers remain configured", () => {
   }
 });
 
+test("authentication flows pass CAPTCHA tokens to Supabase", () => {
+  for (const page of ["signup", "login", "forgot-password"]) {
+    const source = fs.readFileSync(`src/app/(auth)/${page}/page.tsx`, "utf8");
+    assert.match(source, /captchaToken/);
+    assert.match(source, /AuthCaptcha/);
+  }
+  assert.match(fs.readFileSync("next.config.ts", "utf8"), /challenges\.cloudflare\.com/);
+});
+
+test("server errors are reported without request headers or raw messages", () => {
+  const instrumentation = fs.readFileSync("src/instrumentation.ts", "utf8");
+  assert.match(instrumentation, /onRequestError/);
+  assert.match(instrumentation, /ERROR_MONITOR_WEBHOOK_URL/);
+  assert.doesNotMatch(instrumentation, /request\.headers|error\.message/);
+});
+
 test("exam products preserve per-session entitlements", () => {
   const migration = fs.readFileSync("supabase/migrations/20260604000008_product_entitlements.sql", "utf8");
   const atomic = fs.readFileSync("supabase/migrations/20260819000002_atomic_exam_lifecycle.sql", "utf8");
