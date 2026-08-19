@@ -45,6 +45,16 @@ test("deployment preserves environment files and fails on command errors", () =>
   assert.match(deploy, /set -e/);
   assert.match(deploy, /--exclude='\.env\*'/);
   assert.match(deploy, /--delete/);
+  assert.match(deploy, /npm ci/);
+  assert.match(deploy, /npm run env:check/);
+  assert.match(deploy, /node --version/);
+});
+
+test("CI runs the complete local quality gate", () => {
+  const workflow = fs.readFileSync(".github/workflows/ci.yml", "utf8");
+  for (const command of ["npm ci", "npm run lint", "npm run typecheck", "npm test", "npm run questions:audit", "npm run build", "npm audit --omit=dev"]) {
+    assert.match(workflow, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
 });
 
 test("security headers remain configured", () => {

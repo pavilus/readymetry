@@ -21,6 +21,8 @@ Never commit database dumps, service-role keys, access tokens, or production env
 
 Run `./deploy.sh`. It synchronizes source files while preserving server environment files, builds before restarting PM2, and stops immediately if a command fails.
 
+The deployment host must run Node.js 22. Deployment uses `npm ci` and runs `npm run env:check` before building. The preflight reports missing variable names but never prints their values.
+
 Before deployment:
 
 1. Run `npm run lint`.

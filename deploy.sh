@@ -24,6 +24,6 @@ rsync -az --delete -e "ssh -i $SSH_KEY" \
 
 echo "▶ Building and restarting on VPS..."
 ssh -i "$SSH_KEY" "$VPS" \
-  "set -e; cd $REMOTE_PATH; npm install --production=false; npm run build; if pm2 describe readymetry >/dev/null 2>&1; then pm2 restart readymetry; else pm2 start ecosystem.config.js; fi; pm2 save"
+  "set -e; cd $REMOTE_PATH; test \"\$(node --version | cut -d. -f1)\" = v22; npm ci; npm run env:check; npm run build; if pm2 describe readymetry >/dev/null 2>&1; then pm2 restart readymetry; else pm2 start ecosystem.config.js; fi; pm2 save"
 
 echo "✓ Deployed to https://readymetry.com"
