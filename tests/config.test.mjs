@@ -36,8 +36,11 @@ test("marketing navigation points to live routes and sections", () => {
 
 test("support and audit migration preserves internal-note privacy", () => {
   const migration = fs.readFileSync("supabase/migrations/20260604000006_support_audit_catalog.sql", "utf8");
+  const privacy = fs.readFileSync("supabase/migrations/20260819000001_support_ticket_privacy.sql", "utf8");
   assert.match(migration, /GRANT SELECT, INSERT \(user_id, subject, category, message\) ON support_tickets TO authenticated/);
   assert.match(migration, /REVOKE ALL ON audit_logs FROM anon, authenticated/);
+  assert.match(privacy, /REVOKE SELECT ON support_tickets FROM authenticated/);
+  assert.doesNotMatch(privacy, /internal_notes/);
 });
 
 test("deployment preserves environment files and fails on command errors", () => {
@@ -55,6 +58,15 @@ test("CI runs the complete local quality gate", () => {
   for (const command of ["npm ci", "npm run lint", "npm run typecheck", "npm test", "npm run questions:audit", "npm run build", "npm audit --omit=dev"]) {
     assert.match(workflow, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+});
+
+test("CI runs behavioral tests against an isolated local Supabase stack", () => {
+  const workflow = fs.readFileSync(".github/workflows/ci.yml", "utf8");
+  const integration = fs.readFileSync("tests/integration/supabase.test.mjs", "utf8");
+  assert.equal(fs.existsSync("supabase/config.toml"), true);
+  assert.match(workflow, /supabase start/);
+  assert.match(workflow, /npm run test:integration/);
+  assert.match(integration, /Refusing to run integration tests against a remote Supabase project/);
 });
 
 test("security headers remain configured", () => {

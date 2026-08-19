@@ -35,3 +35,15 @@ After deployment:
 1. Verify `/api/health`.
 2. Verify `/`, `/signup`, and one protected-route redirect.
 3. Confirm `pm2 status readymetry` is online.
+
+## Integration tests
+
+The behavioral integration suite runs against the disposable local Supabase stack in CI. It validates RLS isolation, protected question answers, entitlement consumption and refunds, Stripe event idempotency, and Workforce fulfillment.
+
+To run it locally, install Docker and the Supabase CLI, then run:
+
+1. `supabase start`
+2. Export `API_URL`, `ANON_KEY`, and `SERVICE_ROLE_KEY` from `supabase status -o env` as `SUPABASE_TEST_URL`, `SUPABASE_TEST_ANON_KEY`, and `SUPABASE_TEST_SERVICE_ROLE_KEY`.
+3. Run `npm run test:integration`.
+
+The suite refuses remote Supabase URLs unless `ALLOW_REMOTE_SUPABASE_TESTS=true` is deliberately provided. Never point it at production.

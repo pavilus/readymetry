@@ -21,3 +21,24 @@ jobs:
       - run: npm run questions:audit
       - run: npm run build
       - run: npm audit --omit=dev --audit-level=high
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.98.2
+      - run: npm ci
+      - run: supabase start
+      - name: Export isolated Supabase credentials
+        run: |
+          eval "$(supabase status -o env)"
+          echo "SUPABASE_TEST_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "SUPABASE_TEST_ANON_KEY=$ANON_KEY" >> "$GITHUB_ENV"
+          echo "SUPABASE_TEST_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY" >> "$GITHUB_ENV"
+      - run: npm run test:integration
