@@ -315,6 +315,47 @@ export interface Database {
           joined_at: string | null;
         }>;
       };
+      stripe_purchases: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          product: "single_exam" | "readiness_pack" | "workforce_5" | "workforce_10" | "workforce_25";
+          stripe_checkout_session_id: string;
+          stripe_payment_intent_id: string | null;
+          stripe_charge_id: string | null;
+          stripe_customer_id: string | null;
+          amount_total: number;
+          amount_refunded: number;
+          currency: string;
+          payment_status: "paid" | "partially_refunded" | "refunded" | "disputed" | "dispute_won" | "dispute_lost";
+          fulfillment_status: "pending" | "fulfilled" | "requires_review";
+          entitlement_units: number;
+          action_required: boolean;
+          paid_at: string;
+          refunded_at: string | null;
+          disputed_at: string | null;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+      };
+      stripe_payment_events: {
+        Row: {
+          event_id: string;
+          purchase_id: string | null;
+          event_type: string;
+          stripe_object_id: string | null;
+          stripe_payment_intent_id: string | null;
+          stripe_charge_id: string | null;
+          amount: number | null;
+          currency: string | null;
+          object_status: string | null;
+          processing_status: "processed" | "unmatched";
+          received_at: string;
+        };
+        Insert: never;
+        Update: never;
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -344,10 +385,40 @@ export interface Database {
           p_event_type: string;
           p_user_id: string;
           p_product: string;
-          p_customer_id?: string | null;
-          p_checkout_session_id?: string | null;
+          p_customer_id: string | null;
+          p_checkout_session_id: string;
+          p_payment_intent_id: string | null;
+          p_amount_total: number;
+          p_currency: string;
         };
         Returns: boolean;
+      };
+      record_stripe_lifecycle_event: {
+        Args: {
+          p_event_id: string;
+          p_event_type: string;
+          p_object_id: string;
+          p_payment_intent_id: string | null;
+          p_charge_id: string | null;
+          p_amount: number | null;
+          p_currency: string | null;
+          p_object_status: string | null;
+        };
+        Returns: boolean;
+      };
+      create_exam_session_with_access: {
+        Args: {
+          p_user_id: string;
+          p_certification_id: string;
+          p_exam_type: string;
+          p_categories: string[];
+          p_question_ids: string[];
+        };
+        Returns: Json;
+      };
+      submit_exam_session_atomic: {
+        Args: { p_user_id: string; p_session_id: string; p_answers: Json; p_time_taken_seconds: number };
+        Returns: Json;
       };
       claim_workforce_invitation: {
         Args: { p_user_id: string; p_email: string };

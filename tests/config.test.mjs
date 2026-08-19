@@ -14,6 +14,7 @@ test("required public and operational routes exist", () => {
     "src/app/api/health/route.ts",
     "src/app/(dashboard)/support/page.tsx",
     "src/app/(dashboard)/team/page.tsx",
+    "src/app/(admin)/admin/revenue/page.tsx",
     "src/app/sitemap.ts",
     "src/app/robots.ts",
     "src/app/opengraph-image.tsx",
@@ -103,6 +104,19 @@ test("workforce is self-serve through Stripe and team seats", () => {
   assert.match(migration, /CREATE TABLE IF NOT EXISTS workforce_organizations/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS workforce_members/);
   assert.match(migration, /claim_workforce_invitation/);
+});
+
+test("Stripe lifecycle events are recorded and surfaced for reconciliation", () => {
+  const migration = fs.readFileSync("supabase/migrations/20260819000003_stripe_purchase_ledger.sql", "utf8");
+  const webhook = fs.readFileSync("src/app/api/stripe/webhook/route.ts", "utf8");
+  const adminNav = fs.readFileSync("src/app/(admin)/AdminSidebar.tsx", "utf8");
+  assert.match(migration, /CREATE TABLE stripe_purchases/);
+  assert.match(migration, /CREATE TABLE stripe_payment_events/);
+  assert.match(migration, /processing_status IN \('processed', 'unmatched'\)/);
+  for (const event of ["checkout.session.async_payment_succeeded", "charge.refunded", "charge.dispute.created", "charge.dispute.closed"]) {
+    assert.match(webhook, new RegExp(event.replaceAll(".", "\\.")));
+  }
+  assert.match(adminNav, /\/admin\/revenue/);
 });
 
 test("question-bank growth is reviewed and balanced", () => {

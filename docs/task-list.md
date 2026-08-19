@@ -34,6 +34,6 @@
 ## Stripe work - last
 
 - [ ] Complete a real purchase and fulfillment test
-- [ ] Add purchase ledger and admin revenue reporting
-- [ ] Handle refunds and disputes
+- [x] Add purchase ledger and admin revenue reporting
+- [x] Handle refunds and disputes
 - [ ] Remove the stale Readymetry API webhook

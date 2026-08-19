@@ -294,6 +294,9 @@ test("Stripe fulfillment is idempotent", async () => {
     p_product: "single_exam",
     p_customer_id: `cus_${runId}`,
     p_checkout_session_id: `cs_${runId}`,
+    p_payment_intent_id: `pi_${runId}`,
+    p_amount_total: 3900,
+    p_currency: "usd",
   };
 
   const first = await admin.rpc("fulfill_stripe_purchase", args);
@@ -306,6 +309,94 @@ test("Stripe fulfillment is idempotent", async () => {
   const profile = await admin.from("user_profiles").select("purchased_exam_credits").eq("id", userOne.id).single();
   assert.ifError(profile.error);
   assert.equal(profile.data.purchased_exam_credits, 1);
+
+  const purchase = await admin.from("stripe_purchases")
+    .select("id, amount_total, currency, payment_status, fulfillment_status, action_required")
+    .eq("stripe_checkout_session_id", args.p_checkout_session_id)
+    .single();
+  assert.ifError(purchase.error);
+  assert.equal(purchase.data.amount_total, 3900);
+  assert.equal(purchase.data.fulfillment_status, "fulfilled");
+
+  const refundArgs = {
+    p_event_id: `evt_refund_${runId}`,
+    p_event_type: "charge.refunded",
+    p_object_id: `ch_${runId}`,
+    p_payment_intent_id: args.p_payment_intent_id,
+    p_charge_id: `ch_${runId}`,
+    p_amount: 1000,
+    p_currency: "usd",
+    p_object_status: "partially_refunded",
+  };
+  const refund = await admin.rpc("record_stripe_lifecycle_event", refundArgs);
+  assert.ifError(refund.error);
+  assert.equal(refund.data, true);
+  const duplicateRefund = await admin.rpc("record_stripe_lifecycle_event", refundArgs);
+  assert.ifError(duplicateRefund.error);
+  assert.equal(duplicateRefund.data, false);
+  const refunded = await admin.from("stripe_purchases")
+    .select("amount_refunded, payment_status, fulfillment_status, action_required")
+    .eq("id", purchase.data.id)
+    .single();
+  assert.ifError(refunded.error);
+  assert.deepEqual(refunded.data, {
+    amount_refunded: 1000,
+    payment_status: "partially_refunded",
+    fulfillment_status: "requires_review",
+    action_required: true,
+  });
+
+  const disputeBase = {
+    p_object_id: `du_${runId}`,
+    p_payment_intent_id: args.p_payment_intent_id,
+    p_charge_id: `ch_${runId}`,
+    p_amount: 2900,
+    p_currency: "usd",
+  };
+  const disputed = await admin.rpc("record_stripe_lifecycle_event", {
+    ...disputeBase,
+    p_event_id: `evt_dispute_created_${runId}`,
+    p_event_type: "charge.dispute.created",
+    p_object_status: "needs_response",
+  });
+  assert.ifError(disputed.error);
+  assert.equal(disputed.data, true);
+  const won = await admin.rpc("record_stripe_lifecycle_event", {
+    ...disputeBase,
+    p_event_id: `evt_dispute_closed_${runId}`,
+    p_event_type: "charge.dispute.closed",
+    p_object_status: "won",
+  });
+  assert.ifError(won.error);
+  assert.equal(won.data, true);
+  const resolved = await admin.from("stripe_purchases")
+    .select("payment_status, fulfillment_status, action_required")
+    .eq("id", purchase.data.id)
+    .single();
+  assert.ifError(resolved.error);
+  assert.deepEqual(resolved.data, { payment_status: "dispute_won", fulfillment_status: "fulfilled", action_required: false });
+
+  const hiddenLedger = await clientOne.from("stripe_purchases").select("id");
+  assert.ok(hiddenLedger.error, "payment records must remain server-only");
+});
+
+test("unmatched Stripe events are retained for reconciliation", async () => {
+  const eventId = `evt_unmatched_${runId}`;
+  const result = await admin.rpc("record_stripe_lifecycle_event", {
+    p_event_id: eventId,
+    p_event_type: "charge.dispute.created",
+    p_object_id: `du_unmatched_${runId}`,
+    p_payment_intent_id: `pi_unmatched_${runId}`,
+    p_charge_id: `ch_unmatched_${runId}`,
+    p_amount: 3900,
+    p_currency: "usd",
+    p_object_status: "needs_response",
+  });
+  assert.ifError(result.error);
+  assert.equal(result.data, false);
+  const event = await admin.from("stripe_payment_events").select("processing_status, purchase_id").eq("event_id", eventId).single();
+  assert.ifError(event.error);
+  assert.deepEqual(event.data, { processing_status: "unmatched", purchase_id: null });
 });
 
 test("workforce fulfillment creates the owner and invitation claims are private", async () => {
@@ -316,6 +407,9 @@ test("workforce fulfillment creates the owner and invitation claims are private"
     p_product: "workforce_5",
     p_customer_id: `cus_workforce_${runId}`,
     p_checkout_session_id: `cs_workforce_${runId}`,
+    p_payment_intent_id: `pi_workforce_${runId}`,
+    p_amount_total: 14900,
+    p_currency: "usd",
   });
   assert.ifError(purchase.error);
 

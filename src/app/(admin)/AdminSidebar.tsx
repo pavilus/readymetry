@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, BookOpen, ExternalLink, Plug, MessageSquare, FileText } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ExternalLink, Plug, MessageSquare, FileText, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -12,6 +12,7 @@ const NAV = [
   { icon: BookOpen,        label: "Questions", href: "/admin/questions" },
   { icon: MessageSquare,   label: "Tickets",   href: "/admin/tickets" },
   { icon: FileText,        label: "Audit Logs",href: "/admin/logs" },
+  { icon: DollarSign,      label: "Revenue",   href: "/admin/revenue" },
   { icon: Plug,            label: "Integrations", href: "/admin/integrations" },
 ];
 

@@ -14,7 +14,12 @@ Readymetry keeps payment secrets in server environment variables. Never put a St
 3. Copy the Stripe secret key from **Developers > API keys**.
 4. Create a webhook endpoint for:
    - URL: `https://readymetry.com/api/stripe/webhook`
-   - Event: `checkout.session.completed`
+   - Events:
+     - `checkout.session.completed`
+     - `checkout.session.async_payment_succeeded`
+     - `charge.refunded`
+     - `charge.dispute.created`
+     - `charge.dispute.closed`
 5. Copy the endpoint's `whsec_...` signing secret.
 
 Set these variables in the server environment:
@@ -34,3 +39,16 @@ STRIPE_WORKFORCE_25_PRICE_ID=price_workforce_25
 ```
 
 After changing production values, rebuild and restart the Next.js process. Confirm status at `/admin/integrations`, then complete one Stripe test-mode purchase and verify that exam credits or Workforce seats are fulfilled exactly once.
+
+## Reconciliation and recovery
+
+The `/admin/revenue` page shows recorded gross payments, refunds, fulfillment state, and unmatched Stripe events. Refunds and lost disputes are marked `requires_review`; access is not automatically removed because it may already have been consumed.
+
+For a paid but missing purchase:
+
+1. Confirm the Checkout Session is paid in Stripe.
+2. Find the corresponding webhook delivery and retry it from Stripe.
+3. Verify the purchase appears in `/admin/revenue` with `fulfilled` status.
+4. Confirm the user's credit count or Workforce organization exactly once.
+
+For an unmatched event, locate its PaymentIntent in Stripe and compare it with `stripe_purchases.stripe_payment_intent_id`. Resolve the underlying missing checkout event before changing entitlements manually.
